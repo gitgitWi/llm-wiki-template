@@ -28,6 +28,12 @@ updated: 2026-08-17
 ## [2026-08-17] ingest | macOS on-device STT 조사
 - wiki/synthesis/on-device-stt-macos.md 생성 (기존 리서치 문서 이관)
 
+## [2026-08-17] tool | 저장 후 자동 커밋·푸시
+- vcs.py: commit → fetch → rebase → push. 충돌 시 rebase abort 후 커밋만 남김
+- pathspec으로 커밋 범위 제한 — 다른 staged 변경을 쓸어담지 않는다
+- visibility: private 문서와 gitignore 경로는 커밋 제외 (공개 저장소에선 커밋이 곧 공개)
+- 이에 맞춰 digest 기본 visibility를 public으로 변경
+
 ## [2026-08-17] tool | 청킹 제거 — AI 패스를 파일 기반 에이전트 실행으로
 - llm.py·markdown.py 삭제, agent.py 신설. 프롬프트가 본문 대신 경로를 나른다
 - 격리된 스크래치 디렉토리에 원문을 복사해 넣고 에이전트가 거기서만 작업

@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 if __package__ in (None, ""):
@@ -32,8 +33,26 @@ if __package__ in (None, ""):
     __package__ = _pkg_dir.name
     importlib.import_module(__package__)
 
-from . import agent, documents, passes
+from . import agent, documents, passes, vcs
 from .extractors import Article, ExtractionError, browser_reread, extract
+
+_COMMIT_LABELS = {
+    "scrap": "원문 보관",
+    "summarize": "요약",
+    "translate": "한국어 번역",
+    "browser": "브라우저 재추출",
+    "xarticle": "X Article 전문",
+}
+
+
+def _sync(payload: Dict[str, Any]) -> None:
+    """Commit and push whatever the action wrote, recording the outcome."""
+    paths = [Path(f["path"]) for f in payload.get("files") or []]
+    if not paths:
+        return
+    title = str(payload.get("title") or payload.get("stem") or "archive").strip()
+    label = _COMMIT_LABELS.get(str(payload.get("action")), str(payload.get("action")))
+    payload["git"] = vcs.sync(paths, f"docs(archive): {title[:60]} — {label}")
 
 
 def _emit(payload: Dict[str, Any], as_json: bool) -> int:
@@ -229,12 +248,16 @@ def _do_show(url: str) -> Dict[str, Any]:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="article-archive")
     parser.add_argument("--json", action="store_true", help="emit one JSON object")
+    parser.add_argument(
+        "--no-sync", action="store_true", help="skip the git commit/push"
+    )
     sub = parser.add_subparsers(dest="action", required=True)
 
-    # Accept --json on either side of the subcommand. SUPPRESS keeps the
-    # subparser from resetting a flag the top level already set.
+    # Accept the shared flags on either side of the subcommand. SUPPRESS keeps
+    # the subparser from resetting one the top level already set.
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+    common.add_argument("--no-sync", action="store_true", default=argparse.SUPPRESS)
 
     scrap = sub.add_parser("scrap", parents=[common], help="extract a URL into raw/articles")
     scrap.add_argument("url")
@@ -274,6 +297,9 @@ def main(argv=None) -> int:
         payload = _do_xarticle(args.target, stem=args.stem)
     else:
         payload = _do_show(args.url)
+
+    if payload.get("ok") and args.action != "show" and not args.no_sync:
+        _sync(payload)
 
     if args.action == "show" and not args.json and payload.get("ok"):
         print(payload.pop("content_md", ""))

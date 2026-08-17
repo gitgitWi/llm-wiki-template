@@ -46,6 +46,38 @@ published.
 `scrap` writes `raw/` once and only `browser` replaces it — that is a better
 capture of the same source, not an edit.
 
+## Committing
+
+Every pass commits and pushes what it wrote — an archive that exists only on
+one laptop is half an archive. Order is **commit → fetch → rebase → push**:
+pulling into a dirty tree is how you lose a file you just generated, so the
+commit happens first and the worst case is a local commit that has not gone out
+yet.
+
+A diverged remote that will not rebase cleanly aborts the rebase and skips the
+push, leaving the commit local. Nothing here force-pushes, and nothing here can
+fail the pass — the document is already on disk, so git trouble is a warning,
+not a lost archive.
+
+Two things it refuses to commit, both on purpose:
+
+- **gitignored paths.** In the public template `raw/` is ignored, so `scrap`
+  and `translate` write nothing committable. That is the normal case, not an
+  error, so those paths are filtered out before `git add` rather than tried and
+  apologised for.
+- **anything marked `visibility: private`**, while `git_require_public` is on.
+  In a public repo committing a file *is* publishing it, more directly than the
+  web app would — so the frontmatter field that means "not for publication" is
+  honoured at the repo boundary too. Setting a digest to private is the escape
+  hatch for a summary that turns out to be too personal to share.
+
+The commit is pathspec-limited to the files the pass wrote, so whatever else
+happens to be staged in the repo is not swept into it.
+
+A private fork turns `git_require_public` off and sets `digest_visibility` back
+to `private`: there the repo itself is the boundary and everything belongs in
+it.
+
 ## Extraction tiers
 
 | Tier | When | Typical |
@@ -149,6 +181,10 @@ template merges), or with `ARTICLE_ARCHIVE_<KEY>` environment variables.
 | Key | Default | Meaning |
 |---|---|---|
 | `wiki_root` | the repo this lives in | Where files are written. |
+| `git_autocommit` / `git_push` | `true` / `true` | Commit and push after each pass. `--no-sync` skips both for one run. |
+| `git_require_public` | `true` | Refuse to commit `visibility: private` documents. Turn off in a private fork. |
+| `git_remote` / `git_branch` | `origin` / current | Where to push. |
+| `digest_visibility` | `public` | What new digests are marked. `private` in a private fork. |
 | `uri_mode` | `path` | `github` reports blob URLs — set this in a private fork. |
 | `github_repo` / `github_branch` | `""` / `main` | Used by `uri_mode: github`. |
 | `min_word_count` | `120` | Below this, retry extraction through the browser. |

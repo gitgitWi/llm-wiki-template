@@ -119,6 +119,12 @@ Phase 1은 public만 다루므로 당장 문제는 아니지만, **디렉토리 
 
 슬러그 규칙은 파일명과 같다(ASCII kebab-case, `CLAUDE.md` §3-1). 한글 제목이어도 파일명은 ASCII라 URL 인코딩 문제가 없다.
 
+### 아카이브가 main에 자동 푸시된다
+
+`tools/article_archive` 는 요약을 쓸 때마다 커밋하고 푸시한다. 즉 **링크 하나 아카이브할 때마다 main이 움직인다.** push 트리거로 배포를 걸면 하루에도 여러 번 재배포되므로, 배포 워크플로에 `paths` 필터(`wiki/**`, `apps/web/**`)나 concurrency 그룹을 걸어 중복 실행을 접는 편이 낫다.
+
+`visibility: private` 문서와 gitignore된 경로는 커밋되지 않으므로, 푸시되는 것은 곧 공개 대상이다 — 빌드 입력과 저장소 상태가 어긋나지 않는다.
+
 ### `visibility` 누락은 public이 아니라 private
 
 스키마 기본값을 반드시 `private` 으로 둔다. zod에서 `.default('private')`. 실수로 `.optional()` 만 걸어두면 누락된 문서가 public으로 새어나간다.

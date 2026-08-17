@@ -40,10 +40,34 @@ DEFAULTS: Dict[str, Any] = {
     "uri_mode": "path",
     "github_repo": "",
     "github_branch": "main",
-    # Default visibility written into new files. private is the fail-safe;
-    # an external article's full text is never public.
+    # Default visibility written into new files.
+    #
+    # raw stays private always — an external article's full text is not ours to
+    # republish. Digests are our own writing and this repo exists to collect
+    # them, so they default to public. Set one to private by hand and it stops
+    # being pushed (see git_require_public); that is the escape hatch for a
+    # summary that turns out to be too personal to share.
+    #
+    # A private fork flips digest_visibility back to private and turns
+    # git_require_public off — there, nothing is published by being committed.
     "raw_visibility": "private",
-    "digest_visibility": "private",
+    "digest_visibility": "public",
+
+    # ---- git --------------------------------------------------------------
+    # An archive that only exists on one laptop is half an archive, so every
+    # pass commits what it wrote. Push integrates first: fetch, rebase, and
+    # only then push — a diverged remote leaves the commit local rather than
+    # forcing anything.
+    "git_autocommit": True,
+    "git_push": True,
+    # In a public repo, committing a file *is* publishing it — more directly
+    # than the web app would. So a document marked `visibility: private` is not
+    # committed at all. Turn this off in a private fork, where the repo itself
+    # is the boundary and everything belongs in it.
+    "git_require_public": True,
+    "git_remote": "origin",
+    "git_branch": "",  # empty = whatever branch is checked out
+    "git_timeout": 120,
 
     # ---- extraction -------------------------------------------------------
     # Below this word count the page is assumed client-rendered and
