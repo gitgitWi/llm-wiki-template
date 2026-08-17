@@ -114,6 +114,26 @@ it.
 | `translate` | `low` | Mechanical, and it fans out into one call per chunk — effort here buys latency more than quality. |
 | `summary` | `high` | One call per article, and the piece that gets published. |
 
+## Why translation still chunks
+
+An agent harness does not remove the need. cline emits its answer as message
+text, so a long article still hits an output ceiling — and it truncates
+*silently*, leaving half an article in the archive with nothing to show
+anything went wrong. `passes.py` therefore checks every returned chunk two
+ways: heading count against the source (the translator is told to preserve
+markdown exactly, so a complete pass returns the same headings) and a length
+floor at 25% for prose with no headings. A chunk that fails either is treated
+as a route failure and falls through the ladder.
+
+That guard is what makes big chunks safe, so they are big: 12,000 characters,
+where a 52k-character article splits into 5 requests instead of 18. Each chunk
+is an independent session that cannot see the others' word choices, so fewer
+chunks means more consistent terminology — and on an agent backend it also
+stops paying ~4.5k tokens of scaffolding eighteen times.
+
+Measured: an 11,923-character article translates complete in a single call,
+~2m15s, output 0.56× the source characters.
+
 ## Settings
 
 Defaults are in `settings.py`. Override with `config.json` next to it
@@ -134,7 +154,7 @@ template merges), or with `ARTICLE_ARCHIVE_<KEY>` environment variables.
 | `llm_provider` / `llm_model` | `copilot` / `claude-haiku-4.5` | Route when hermes/openai is primary. |
 | `llm_fallbacks` | `["copilot/claude-haiku-4.5", "copilot/gpt-4.1"]` | Tried in order after the primary backend fails. Only the first `/` separates provider from model. |
 | `<pass>_model` / `<pass>_thinking` | see above | Per-pass overrides for `labels`, `translate`, `summary`. |
-| `translate_chunk_chars` | `3500` | Source characters per translation request. |
+| `translate_chunk_chars` | `12000` | Source characters per translation request. See below. |
 | `translate_max_chars` | `120000` | Skip translation past this size. |
 | `summary_source_chars` | `24000` | Front slice sent to the summarizer. |
 | `xcom_expand_threads` | `false` | Follow a self-reply chain when archiving an X thread head. Costs one browser visit per X archive. |

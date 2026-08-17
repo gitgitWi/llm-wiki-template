@@ -97,6 +97,33 @@ def _looks_untranslated(source: str, output: str) -> bool:
     return not _HANGUL_RE.search(_FENCE_RE.sub(" ", out))
 
 
+_HEADING_RE = re.compile(r"^#{1,6} ", re.MULTILINE)
+
+
+def _looks_truncated(source: str, output: str) -> bool:
+    """True when a route stopped partway through the chunk.
+
+    Truncation is the failure mode that big chunks introduce, and it is far
+    nastier than an error: the archive ends up holding half an article with no
+    sign anything went wrong. Two signals, structure first because it is the
+    sharper one — the translator is told to preserve markdown exactly, so a
+    complete pass comes back with the same headings.
+    """
+    src, out = source.strip(), output.strip()
+    if not out:
+        return True
+
+    src_headings = len(_HEADING_RE.findall(src))
+    if src_headings >= 3:
+        if len(_HEADING_RE.findall(out)) < src_headings * 0.6:
+            return True
+
+    # Backstop for prose with no headings. English→Korean lands around 0.55 by
+    # character count and code-heavy text closer to 1.0, so a quarter is well
+    # below anything a complete translation produces.
+    return len(out) < len(src) * 0.25
+
+
 # --------------------------------------------------------------------------
 # passes
 # --------------------------------------------------------------------------
@@ -197,7 +224,9 @@ async def _translate_chunk(
                 ],
                 # Korean output runs longer than English source; give it room.
                 max_tokens=max(1024, int(len(chunk) / 1.4)),
-                validate=lambda out, src=chunk: not _looks_untranslated(src, out),
+                validate=lambda out, src=chunk: not (
+                    _looks_untranslated(src, out) or _looks_truncated(src, out)
+                ),
                 **llm.pass_config("translate"),
             )
         except llm.LLMUnavailable:

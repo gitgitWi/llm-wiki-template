@@ -28,6 +28,15 @@ updated: 2026-08-17
 ## [2026-08-17] ingest | macOS on-device STT 조사
 - wiki/synthesis/on-device-stt-macos.md 생성 (기존 리서치 문서 이관)
 
+## [2026-08-17] handoff | Phase 1 웹앱 인수인계 문서
+- wiki/meta/handoff-phase1-webapp.md 생성
+- Phase 0 완료 상태, Astro+Workers 확정 사항, 함정 3건, 누출 벡터 체크리스트
+
+## [2026-08-17] tool | 번역 청크 크기 조정과 잘림 감지
+- translate_chunk_chars 3500 → 12000 (5만자 기사 18청크 → 5청크)
+- 청크는 서로 독립 세션이라 적을수록 용어가 일관됨
+- _looks_truncated: 헤딩 수 비교 + 길이 하한으로 조용한 잘림 차단
+
 ## [2026-08-17] tool | article-archive 수집 파이프라인 도입
 - tools/article_archive/ 추가 (Hermes 플러그인에서 이관)
 - scrap·summarize·translate·browser·xarticle CLI, LLM 백엔드 자동 감지

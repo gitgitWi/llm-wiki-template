@@ -68,7 +68,15 @@ DEFAULTS: Dict[str, Any] = {
     "summary_source_chars": 24000,
     "summary_max_tokens": 1200,
     "translate_max_chars": 120000,
-    "translate_chunk_chars": 3500,
+    # Source characters per translation request. Chunking exists because a
+    # response has an output ceiling — an agent harness does not lift that, it
+    # just truncates silently, which is why passes.py checks for it.
+    #
+    # Sized for an agent/large-context backend: fewer, bigger calls keep
+    # terminology consistent (each chunk is an independent session that cannot
+    # see the others' word choices) and stop paying agent scaffolding per
+    # chunk. Lower it for a small local model.
+    "translate_chunk_chars": 12000,
     "translate_concurrency": 3,
     "request_timeout": 240,
 
