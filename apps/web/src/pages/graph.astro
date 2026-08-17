@@ -1,29 +1,26 @@
 ---
+import GraphCanvas from '../components/GraphCanvas.astro';
 import Base from '../layouts/Base.astro';
-import { buildGraph, getPublicDocs } from '../lib/wiki';
+import { TAG_EDGE_MAX_DOCS, buildGraph, getPublicDocs } from '../lib/wiki';
 
 const docs = await getPublicDocs();
 const { nodes, links } = buildGraph(docs);
+const linkEdges = links.filter((link) => link.kind === 'link');
+const tagEdges = links.filter((link) => link.kind === 'tag');
 const orphans = nodes.filter((node) => node.degree === 0);
 ---
 
-<Base
-  title="그래프"
-  description="공개 문서 사이의 위키링크 연결 그래프."
-  indexable={false}
->
+<Base title="그래프" description="공개 문서 사이의 연결 그래프." indexable={false}>
   <h1 class="page-title">그래프</h1>
   <p class="lede">
-    공개 문서 {nodes.length}개, 연결 {links.length}개. 본문의 <code>[[wikilink]]</code> 와
-    frontmatter 의 <code>related:</code> 를 합쳐서 그린다. 비공개 문서는 노드로도 나오지 않는다.
+    공개 문서 {nodes.length}개. <strong>실선 {linkEdges.length}개</strong>는 본문{' '}
+    <code>[[wikilink]]</code> 와 frontmatter <code>related:</code> — 직접 이어둔 연결이다.{' '}
+    <strong>점선 {tagEdges.length}개</strong>는 태그가 겹치는 문서끼리 이은 것으로, 명시적
+    연결은 아니고 주제가 겹친다는 신호다. 비공개 문서는 노드로도 나오지 않는다.
   </p>
 
-  <figure class="graph">
-    <canvas id="graph-canvas" role="img" aria-label="문서 연결 그래프"></canvas>
-    <figcaption class="card__meta">
-      노드를 끌어 옮길 수 있다. 클릭하면 해당 문서로 이동한다.
-    </figcaption>
-  </figure>
+  {/* 큰 데이터라 인라인하지 않고 graph.json 을 fetch한다. */}
+  <GraphCanvas src="/graph.json" toggle label="문서 연결 그래프" />
 
   <noscript>
     <p class="empty">
@@ -35,6 +32,10 @@ const orphans = nodes.filter((node) => node.degree === 0);
     orphans.length > 0 && (
       <>
         <h2 class="section-title">연결이 없는 문서 · {orphans.length}</h2>
+        <p class="card__meta">
+          링크도 공유 태그도 없는 문서다. <code>[[링크]]</code> 를 하나 걸거나 태그를 맞추면
+          그래프에 들어온다.
+        </p>
         <ul class="chips">
           {orphans.map((node) => (
             <li>
@@ -47,223 +48,11 @@ const orphans = nodes.filter((node) => node.degree === 0);
       </>
     )
   }
+
+  <h2 class="section-title">태그 엣지 규칙</h2>
+  <p class="card__meta">
+    문서 {TAG_EDGE_MAX_DOCS}개보다 많이 붙은 태그는 <strong>관계가 아니라 분류</strong>로 보고
+    엣지를 만들지 않는다. 태그는 열린 어휘라 상한이 없으면 엣지 수가 문서 수의 제곱으로 자라고,
+    인기 태그 몇 개가 그래프를 덩어리로 뭉갠다.
+  </p>
 </Base>
-
-<style>
-  .graph {
-    margin: 0 0 1rem;
-  }
-
-  #graph-canvas {
-    width: 100%;
-    height: min(70vh, 34rem);
-    display: block;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-raised);
-    touch-action: none;
-    cursor: grab;
-  }
-
-  #graph-canvas:active {
-    cursor: grabbing;
-  }
-
-  figcaption {
-    margin-top: 0.5rem;
-  }
-</style>
-
-<script>
-  import {
-    forceCenter,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-  } from 'd3-force';
-
-  type GraphNode = {
-    id: string;
-    title: string;
-    type: string;
-    degree: number;
-    x?: number;
-    y?: number;
-    fx?: number | null;
-    fy?: number | null;
-  };
-  type GraphLink = { source: GraphNode | string; target: GraphNode | string };
-
-  const canvas = document.getElementById('graph-canvas') as HTMLCanvasElement | null;
-  if (canvas) void draw(canvas);
-
-  async function draw(canvas: HTMLCanvasElement) {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const response = await fetch('/graph.json');
-    const { nodes, links } = (await response.json()) as {
-      nodes: GraphNode[];
-      links: GraphLink[];
-    };
-    if (nodes.length === 0) return;
-
-    const css = getComputedStyle(document.documentElement);
-    const colors = {
-      text: css.getPropertyValue('--text').trim() || '#222',
-      muted: css.getPropertyValue('--text-muted').trim() || '#888',
-      accent: css.getPropertyValue('--accent').trim() || '#8a5a2b',
-      border: css.getPropertyValue('--border').trim() || '#ddd',
-    };
-
-    let width = 0;
-    let height = 0;
-    let hovered: GraphNode | null = null;
-    let dragged: GraphNode | null = null;
-
-    const radiusOf = (node: GraphNode) => 5 + Math.min(node.degree, 6) * 1.6;
-
-    /** 라벨이 노드 아래에 붙으므로 아래쪽 여백을 더 준다. */
-    const PAD = { x: 60, top: 16, bottom: 26 };
-
-    const simulation = forceSimulation<GraphNode>(nodes)
-      .force(
-        'link',
-        forceLink<GraphNode, GraphLink>(links)
-          .id((node) => node.id)
-          .distance(110)
-          .strength(0.5),
-      )
-      .force('charge', forceManyBody().strength(-260).distanceMax(420))
-      .force('collide', forceCollide<GraphNode>((node) => radiusOf(node) + 26))
-      .on('tick', () => {
-        clampToCanvas();
-        render();
-      });
-
-    /**
-     * 반발력만 걸어두면 연결이 없는 노드가 캔버스 밖으로 밀려나 영영 안 보인다.
-     * 중심으로 당기는 약한 힘 + 틱마다 경계로 자르기, 둘 다 있어야 한다 —
-     * 당기는 힘만으로는 초기 몇 틱 동안 튀어나간 노드를 못 잡는다.
-     */
-    function clampToCanvas() {
-      for (const node of nodes) {
-        const r = radiusOf(node);
-        node.x = Math.max(PAD.x, Math.min(width - PAD.x, node.x ?? width / 2));
-        node.y = Math.max(PAD.top + r, Math.min(height - PAD.bottom - r, node.y ?? height / 2));
-      }
-    }
-
-    function resize() {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      width = rect.width;
-      height = rect.height;
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      simulation
-        .force('center', forceCenter(width / 2, height / 2))
-        .force('x', forceX(width / 2).strength(0.05))
-        .force('y', forceY(height / 2).strength(0.08))
-        .alpha(0.8)
-        .restart();
-    }
-
-    function render() {
-      ctx!.clearRect(0, 0, width, height);
-
-      ctx!.strokeStyle = colors.border;
-      ctx!.lineWidth = 1;
-      for (const link of links) {
-        const source = link.source as GraphNode;
-        const target = link.target as GraphNode;
-        ctx!.beginPath();
-        ctx!.moveTo(source.x!, source.y!);
-        ctx!.lineTo(target.x!, target.y!);
-        ctx!.stroke();
-      }
-
-      ctx!.textAlign = 'center';
-      ctx!.textBaseline = 'top';
-      ctx!.font = '12px system-ui, sans-serif';
-      for (const node of nodes) {
-        const active = node === hovered;
-        const r = radiusOf(node);
-
-        ctx!.beginPath();
-        ctx!.arc(node.x!, node.y!, active ? r + 2 : r, 0, Math.PI * 2);
-        ctx!.fillStyle = node.type === 'source' ? colors.muted : colors.accent;
-        ctx!.fill();
-
-        ctx!.fillStyle = active ? colors.text : colors.muted;
-        ctx!.fillText(truncate(node.title), node.x!, node.y! + r + 4);
-      }
-    }
-
-    function truncate(label: string) {
-      return label.length > 18 ? `${label.slice(0, 17)}…` : label;
-    }
-
-    function nodeAt(event: PointerEvent): GraphNode | null {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      for (const node of nodes) {
-        const r = radiusOf(node) + 6;
-        if ((node.x! - x) ** 2 + (node.y! - y) ** 2 <= r * r) return node;
-      }
-      return null;
-    }
-
-    canvas.addEventListener('pointermove', (event) => {
-      if (dragged) {
-        const rect = canvas.getBoundingClientRect();
-        dragged.fx = event.clientX - rect.left;
-        dragged.fy = event.clientY - rect.top;
-        simulation.alphaTarget(0.2).restart();
-        return;
-      }
-      const next = nodeAt(event);
-      if (next !== hovered) {
-        hovered = next;
-        canvas.style.cursor = next ? 'pointer' : 'grab';
-        canvas.title = next ? next.title : '';
-        render();
-      }
-    });
-
-    canvas.addEventListener('pointerdown', (event) => {
-      const node = nodeAt(event);
-      if (!node) return;
-      dragged = node;
-      canvas.setPointerCapture(event.pointerId);
-    });
-
-    canvas.addEventListener('pointerup', (event) => {
-      const node = dragged;
-      if (node) {
-        node.fx = null;
-        node.fy = null;
-        dragged = null;
-        simulation.alphaTarget(0);
-      }
-      // 끌지 않고 그냥 눌렀다 뗀 경우만 이동으로 친다.
-      const target = nodeAt(event);
-      if (target && (!node || node === target)) {
-        window.location.href = `/wiki/${target.id}`;
-      }
-    });
-
-    canvas.addEventListener('pointerleave', () => {
-      hovered = null;
-      render();
-    });
-
-    new ResizeObserver(resize).observe(canvas);
-    resize();
-  }
-</script>
