@@ -1,14 +1,16 @@
 ---
 import { render } from 'astro:content';
 
-import DocList from '../../components/DocList.astro';
+import GraphCanvas from '../../components/GraphCanvas.astro';
 import Base from '../../layouts/Base.astro';
 import {
   DOMAIN_LABELS,
   TYPE_LABELS,
-  backlinksOf,
+  buildGraph,
+  egoGraph,
   formatDate,
   getPublicDocs,
+  neighboursOf,
 } from '../../lib/wiki';
 
 /**
@@ -20,13 +22,29 @@ import {
  */
 export async function getStaticPaths() {
   const docs = await getPublicDocs();
-  return docs.map((doc) => ({ params: { slug: doc.id }, props: { doc, docs } }));
+  // 그래프는 여기서 딱 한 번 만든다. 페이지마다 다시 만들면 빌드가 O(문서수²) 다.
+  const graph = buildGraph(docs);
+
+  return docs.map((doc) => ({
+    params: { slug: doc.id },
+    props: {
+      doc,
+      ego: egoGraph(doc.id, graph),
+      neighbours: neighboursOf(doc.id, graph, docs),
+    },
+  }));
 }
 
-const { doc, docs } = Astro.props;
+const { doc, ego, neighbours } = Astro.props;
 const { Content } = await render(doc);
-const backlinks = backlinksOf(doc.id, docs).filter((other) => other.id !== doc.id);
 const source = doc.data.source;
+
+const linkedCount = neighbours.filter((entry) => entry.kind === 'link').length;
+const taggedCount = neighbours.length - linkedCount;
+
+// 노드 3개를 22rem 캔버스에 넣으면 대부분이 빈 공간이다. 이웃 수에 맞춰 줄인다.
+const egoHeight =
+  ego.nodes.length <= 3 ? '13rem' : ego.nodes.length <= 6 ? '18rem' : 'min(52vh, 24rem)';
 ---
 
 <Base title={doc.data.title} description={`${TYPE_LABELS[doc.data.type]} · ${doc.data.tags.join(', ')}`}>
@@ -103,12 +121,78 @@ const source = doc.data.source;
     </div>
   </article>
 
-  {
-    backlinks.length > 0 && (
-      <section class="backlinks" data-pagefind-ignore>
-        <h2 class="section-title">연결된 문서</h2>
-        <DocList docs={backlinks} />
-      </section>
-    )
-  }
+  <section class="backlinks" data-pagefind-ignore>
+    <h2 class="section-title">연결된 문서 · {neighbours.length}</h2>
+
+    {
+      neighbours.length === 0 ? (
+        <p class="empty">
+          아직 이 문서와 이어진 문서가 없다. <code>[[링크]]</code> 를 걸거나 태그를 맞추면
+          여기에 나온다.
+        </p>
+      ) : (
+        <>
+          <p class="card__meta">
+            직접 링크 {linkedCount}개 · 태그 공유 {taggedCount}개. 이웃끼리의 연결도 함께
+            그린다 — 별 모양이면 이 문서가 유일한 연결점이고, 삼각형이 보이면 이미 서로 엮인
+            주제 덩어리다.
+          </p>
+
+          <GraphCanvas
+            data={ego}
+            height={egoHeight}
+            toggle={taggedCount > 0}
+            label={`${doc.data.title} 주변 연결 그래프`}
+          />
+
+          <ul class="neighbours">
+            {neighbours.map(({ doc: other, kind, tags }) => (
+              <li>
+                <a class="doc-item__title" href={`/wiki/${other.id}`}>
+                  {other.data.title}
+                </a>
+                {kind === 'link' ? (
+                  <span class="neighbours__why">직접 링크</span>
+                ) : (
+                  <span class="neighbours__why neighbours__why--tag">
+                    태그 {tags.map((tag) => `#${tag}`).join(' ')}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
+  </section>
 </Base>
+
+<style>
+  .neighbours {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .neighbours > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .neighbours__why {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.05rem 0.5rem;
+  }
+
+  /* 점선 테두리 = 그래프의 점선 엣지. 추론된 관계라는 표시를 둘이 공유한다. */
+  .neighbours__why--tag {
+    border-style: dashed;
+  }
+</style>

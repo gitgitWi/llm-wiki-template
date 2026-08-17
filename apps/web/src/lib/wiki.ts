@@ -268,14 +268,3 @@ export function neighboursOf(
       return rank(a.kind) - rank(b.kind) || byUpdatedDesc(a.doc, b.doc);
     });
 }
-
-/**
- * 이 문서와 이어진 문서들. 아직 문서 상세 페이지가 쓰는 옛 경로다.
- *
- * @deprecated `neighboursOf()` 로 옮긴다 — 페이지마다 `buildGraph()` 를 다시 돌려서
- *   빌드가 O(문서수²) 다. 문서가 몇 개일 때는 안 보이지만 구조적으로 틀렸다.
- */
-export function backlinksOf(slug: string, docs: Doc[]): Doc[] {
-  const graph = buildGraph(docs);
-  return neighboursOf(slug, graph, docs).map((entry) => entry.doc);
-}
