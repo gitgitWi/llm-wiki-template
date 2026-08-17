@@ -81,6 +81,8 @@ const orphans = nodes.filter((node) => node.degree === 0);
     forceLink,
     forceManyBody,
     forceSimulation,
+    forceX,
+    forceY,
   } from 'd3-force';
 
   type GraphNode = {
@@ -124,17 +126,36 @@ const orphans = nodes.filter((node) => node.degree === 0);
 
     const radiusOf = (node: GraphNode) => 5 + Math.min(node.degree, 6) * 1.6;
 
+    /** 라벨이 노드 아래에 붙으므로 아래쪽 여백을 더 준다. */
+    const PAD = { x: 60, top: 16, bottom: 26 };
+
     const simulation = forceSimulation<GraphNode>(nodes)
       .force(
         'link',
         forceLink<GraphNode, GraphLink>(links)
           .id((node) => node.id)
-          .distance(90)
-          .strength(0.35),
+          .distance(110)
+          .strength(0.5),
       )
-      .force('charge', forceManyBody().strength(-320))
-      .force('collide', forceCollide<GraphNode>((node) => radiusOf(node) + 22))
-      .on('tick', render);
+      .force('charge', forceManyBody().strength(-260).distanceMax(420))
+      .force('collide', forceCollide<GraphNode>((node) => radiusOf(node) + 26))
+      .on('tick', () => {
+        clampToCanvas();
+        render();
+      });
+
+    /**
+     * 반발력만 걸어두면 연결이 없는 노드가 캔버스 밖으로 밀려나 영영 안 보인다.
+     * 중심으로 당기는 약한 힘 + 틱마다 경계로 자르기, 둘 다 있어야 한다 —
+     * 당기는 힘만으로는 초기 몇 틱 동안 튀어나간 노드를 못 잡는다.
+     */
+    function clampToCanvas() {
+      for (const node of nodes) {
+        const r = radiusOf(node);
+        node.x = Math.max(PAD.x, Math.min(width - PAD.x, node.x ?? width / 2));
+        node.y = Math.max(PAD.top + r, Math.min(height - PAD.bottom - r, node.y ?? height / 2));
+      }
+    }
 
     function resize() {
       const rect = canvas.getBoundingClientRect();
@@ -144,7 +165,12 @@ const orphans = nodes.filter((node) => node.degree === 0);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      simulation.force('center', forceCenter(width / 2, height / 2)).alpha(0.6).restart();
+      simulation
+        .force('center', forceCenter(width / 2, height / 2))
+        .force('x', forceX(width / 2).strength(0.05))
+        .force('y', forceY(height / 2).strength(0.08))
+        .alpha(0.8)
+        .restart();
     }
 
     function render() {
