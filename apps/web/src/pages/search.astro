@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="검색" description="공개 위키 문서 전문 검색." indexable={false}>
+  <h1 class="page-title">검색</h1>
+  <p class="lede">
+    빌드 때 만들어둔 정적 색인을 브라우저에서 검색한다. 서버로 질의를 보내지 않고, 공개 문서만
+    색인되어 있다.
+  </p>
+
+  <div id="search"></div>
+  <noscript>
+    <p class="empty">검색은 스크립트가 필요하다. <a href="/wiki/">문서 목록</a>을 보라.</p>
+  </noscript>
+</Base>
+
+<style is:global>
+  /* Pagefind 기본 UI를 사이트 토큰에 맞춘다. */
+  #search {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: var(--text);
+    --pagefind-ui-text: var(--text);
+    --pagefind-ui-background: var(--bg);
+    --pagefind-ui-border: var(--border);
+    --pagefind-ui-tag: var(--bg-sunken);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: var(--radius);
+    --pagefind-ui-font: var(--font-sans);
+    max-width: var(--measure);
+  }
+</style>
+
+<script>
+  // Pagefind 번들은 `astro build` 이후 pagefind CLI가 dist/ 에 넣는다.
+  // 빌드 그래프에 없는 파일이라 Vite가 해석하지 못하므로 런타임에 주입한다.
+  const PAGEFIND_BASE = '/_pagefind';
+
+  async function mount() {
+    const container = document.getElementById('search');
+    if (!container) return;
+
+    document.head.insertAdjacentHTML(
+      'beforeend',
+      `<link rel="stylesheet" href="${PAGEFIND_BASE}/pagefind-ui.css">`,
+    );
+
+    try {
+      await import(/* @vite-ignore */ `${PAGEFIND_BASE}/pagefind-ui.js`);
+    } catch {
+      container.innerHTML =
+        '<p class="empty">검색 색인이 없다. <code>npm run build</code> 로 색인을 만든 뒤 다시 열어보라.</p>';
+      return;
+    }
+
+    // @ts-expect-error — pagefind-ui.js 가 전역에 등록한다
+    new window.PagefindUI({
+      element: '#search',
+      bundlePath: `${PAGEFIND_BASE}/`,
+      showSubResults: true,
+      showImages: false,
+      excerptLength: 30,
+      translations: {
+        placeholder: '문서 검색',
+        zero_results: '"[SEARCH_TERM]" 에 대한 결과가 없다',
+        many_results: '"[SEARCH_TERM]" 결과 [COUNT]건',
+        one_result: '"[SEARCH_TERM]" 결과 1건',
+        searching: '"[SEARCH_TERM]" 검색 중',
+        clear_search: '지우기',
+        load_more: '더 보기',
+      },
+    });
+  }
+
+  void mount();
+</script>
