@@ -1,0 +1,104 @@
+# llm-wiki-template
+
+LLM이 관리하는 개인 지식베이스 템플릿. 마크다운 + git만으로 동작하고, Obsidian과 Claude Code(또는 Codex)를 그대로 쓴다.
+
+[Karpathy의 LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 패턴을 기반으로, Zettelkasten의 원자성·연결 원칙과 커뮤니티에서 나온 쓰기 게이트 규칙을 얹었다. 배경 조사는 [`wiki/synthesis/llm-wiki-methodology.md`](wiki/synthesis/llm-wiki-methodology.md), 구조 결정 근거는 [`wiki/meta/adr-0001-structure.md`](wiki/meta/adr-0001-structure.md) 참조.
+
+## 무엇이 다른가
+
+일반 RAG는 질문할 때마다 원본에서 지식을 다시 찾아낸다. 축적이 없다.
+
+이 구조는 **소스를 넣는 시점에 LLM이 위키를 갱신**한다. 요약 페이지를 만들고, 관련 개념 페이지를 고치고, 크로스링크를 걸고, 인덱스를 갱신한다. 지식이 한 번 정리되어 계속 유지되고, 쓸수록 복리로 쌓인다.
+
+사람이 위키를 직접 쓰지 않는다. 사람은 소싱·방향·질문을 맡고, 북키핑은 LLM이 한다.
+
+## 구조 — 폴더가 곧 쓰기 권한
+
+| 계층 | 내용 | LLM 권한 |
+|---|---|---|
+| `raw/` | 외부 원본 (기사·스레드·영상·논문·공고) | **읽기 전용** |
+| `notes/` | 직접 쓴 글 (메모·아이디에이션·커리어) | **제안만** |
+| `wiki/` | LLM이 생성·유지하는 페이지 | **자유 쓰기** |
+
+```
+raw/      articles/ threads/ videos/ papers/ jobs/ assets/   ← 소스 타입별
+notes/    inbox/ ideas/ career/ logs/                        ← 목적별
+wiki/     index.md log.md digests/ concepts/ entities/ synthesis/ meta/
+CLAUDE.md                                                    ← 운영 스키마
+```
+
+**분야는 폴더가 아니라 frontmatter로 나눈다.** 폴더는 하나만 고를 수 있어서 여러 분야에 걸친 자료를 담지 못한다.
+
+```yaml
+domains: [ai, career]     # 닫힌 어휘 — 내비게이션용
+tags: [llm, hiring]       # 열린 어휘 — LLM이 추출
+visibility: private       # 누락·오타 시 private 취급
+```
+
+## 연산
+
+`.claude/commands/` 에 정의되어 있다.
+
+| 커맨드 | 하는 일 |
+|---|---|
+| `/ingest <url>` | raw 저장 → 요약 페이지 작성 → 관련 개념·엔티티 갱신·크로스링크 → index·log 갱신 |
+| `/query <question>` | index부터 드릴다운 → 인용 포함 답변 → **좋은 답변은 페이지로 저장** |
+| `/lint` | 고아 페이지·깨진 링크·모순·스키마 위반·공개 안전 점검 |
+| `/publish <path>` | 개인정보·회사정보·저작권·private 링크 체크 후 공개 전환 |
+
+## 쓰기 게이트
+
+LLM에게 전권을 주지도, 전부 승인받게 하지도 않는다.
+
+| 유형 | 처리 |
+|---|---|
+| 재도출 가능 — 요약·태그·크로스링크 | 자유롭게 자동 작성 |
+| 되돌릴 수 있음 — 구조 변경 | 작성하되 log에 남김 |
+| 비가역적·사람에 대한 주장 — 삭제·인물 평가 | 제안만, 승인 대기 |
+
+**모순은 이원화한다.** 날짜·수치처럼 재계산 가능한 불일치는 바로 고치고, 두 산문 주장이 충돌하면 위키에 확정하지 않고 사람에게 보고한다. 모델의 추론이 지식 기반에 고착되는 것을 막기 위함이다.
+
+git이 최종 안전망이라 LLM이 잘못 써도 되돌릴 수 있다.
+
+## 시작하기
+
+```bash
+# 1. 이 저장소를 받는다
+git clone https://github.com/gitgitWi/llm-wiki-template.git my-wiki
+cd my-wiki
+
+# 2. 예시 콘텐츠를 비운다 (원하면)
+rm wiki/synthesis/*.md
+
+# 3. Obsidian vault로 열고, Claude Code를 띄운다
+#    Web Clipper 저장 경로를 raw/articles/ 로 설정하면 캡처가 바로 꽂힌다
+
+# 4. 첫 소스를 넣는다
+#    /ingest https://example.com/article
+```
+
+### 비공개로 쓰려면
+
+개인 자료를 넣을 거라면 private 저장소가 필요하다. **fork는 안 된다** — public repo의 fork는 항상 public이고 private으로 바꿀 수 없다.
+
+```bash
+git clone https://github.com/gitgitWi/llm-wiki-template.git my-wiki
+cd my-wiki
+git remote rename origin template
+git remote set-url --push template no_push    # 콘텐츠가 위로 새는 사고 방지
+gh repo create my-wiki --private --source=. --push --remote=origin
+
+# 이후 템플릿 업데이트를 받을 때
+git merge template/main
+```
+
+## 로드맵
+
+- [x] **Phase 0** — 3계층 구조, 운영 스키마, 슬래시 커맨드
+- [ ] **Phase 1** — Astro + Cloudflare Workers 웹앱, Pagefind 검색, 그래프 뷰
+- [ ] **Phase 2** — GitHub OAuth, private 문서 열람, 누출 가드 CI
+- [ ] **Phase 3** — 웹 편집, 모바일 퀵캡처, 로컬 임베딩 기반 관련 문서 제안
+
+## 라이선스
+
+구조·스키마·커맨드는 MIT. `wiki/` 아래 문서는 각 문서의 출처 표기를 따른다.

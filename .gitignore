@@ -1,0 +1,24 @@
+# graphify 산출물 (재생성 가능)
+graphify-out/
+
+# 의존성·빌드
+node_modules/
+dist/
+.astro/
+.wrangler/
+
+# 환경변수·시크릿
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# OS·에디터
+.DS_Store
+.idea/
+*.swp
+
+# Obsidian 로컬 설정 (워크스페이스 상태는 공유하지 않음)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache

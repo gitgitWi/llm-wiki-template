@@ -1,0 +1,52 @@
+---
+title: 위키 인덱스
+type: note
+visibility: public
+domains: [misc]
+tags: [index]
+status: living
+created: 2026-08-17
+updated: 2026-08-17
+---
+
+# 위키 인덱스
+
+> 이 위키의 전체 카탈로그. **모든 쿼리는 여기서 시작한다.**
+> 페이지를 만들거나 지우면 즉시 반영한다.
+
+- 페이지 3 · 소스 0 · 최종 갱신 2026-08-17
+
+---
+
+## Synthesis — 비교·종합
+
+| 페이지 | 요약 | domains |
+|---|---|---|
+| [[llm-wiki-methodology]] | LLM Wiki(Karpathy) 패턴과 Zettelkasten·PARA·NotebookLM·mem0·qmd 비교, 개인 문서 정리 설계안 | `ai` |
+| [[on-device-stt-macos]] | M1 Pro에서 한영 혼용 개발자용 완전 로컬 STT 도구 비교 | `ai` `dev` |
+
+## Concepts — 개념·주제
+
+_아직 없음._
+
+## Entities — 사람·회사·제품·도구
+
+_아직 없음._
+
+## Digests — 소스 요약
+
+_아직 없음. `/ingest <url>` 로 추가한다._
+
+## Meta — 결정 기록
+
+| 페이지 | 요약 |
+|---|---|
+| [[adr-0001-structure]] | 3계층 구조, 분야 분류를 frontmatter로 두는 결정, 공개/비공개 분리와 웹앱 아키텍처 |
+
+---
+
+## 분야(domains) 어휘
+
+`ai` · `dev` · `career` · `product` · `infra` · `misc`
+
+새 값이 필요하면 사용자에게 확인하고 이 목록과 `CLAUDE.md` 를 함께 갱신한다.
