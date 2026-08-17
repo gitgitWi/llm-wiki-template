@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // @astrojs/cloudflare v13+ 의 통합 엔트리포인트. dist/_worker.js 를 직접 가리키면
+  // 빌드 전에는 그 파일이 없어서 wrangler가 설정을 읽는 단계에서 먼저 죽는다.
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "name": "llm-wiki",
+  "compatibility_date": "2026-08-17",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // 어댑터가 빌드 후 dist/client 로 다시 써서 `dist/client/wrangler.json` 을 만든다.
+  // `wrangler deploy` 는 그 파일로 리다이렉트되므로 여기서는 디렉토리만 맞춰둔다.
+  "assets": {
+    "directory": "./dist/client"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
