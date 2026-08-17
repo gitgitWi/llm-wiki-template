@@ -48,11 +48,19 @@ class Written:
 # naming
 # --------------------------------------------------------------------------
 
+MAX_SLUG = 60
+
+
 def slugify(text: str) -> str:
     """ASCII kebab-case slug, or "" when *text* carries no ASCII."""
     folded = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode()
-    slug = re.sub(r"[^A-Za-z0-9]+", "-", folded).strip("-").lower()
-    return re.sub(r"-{2,}", "-", slug)[:60].strip("-")
+    slug = re.sub(r"-{2,}", "-", re.sub(r"[^A-Za-z0-9]+", "-", folded).strip("-").lower())
+    if len(slug) > MAX_SLUG:
+        # Cut on a word boundary — "…pelicans-on-bicyc" reads like a typo, and
+        # the slug is what shows up in the URL.
+        head = slug[:MAX_SLUG]
+        slug = head.rsplit("-", 1)[0] if "-" in head else head
+    return slug.strip("-")
 
 
 def make_stem(article: Article, *, today: Optional[str] = None) -> str:

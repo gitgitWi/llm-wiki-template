@@ -28,6 +28,14 @@ updated: 2026-08-17
 ## [2026-08-17] ingest | macOS on-device STT 조사
 - wiki/synthesis/on-device-stt-macos.md 생성 (기존 리서치 문서 이관)
 
+## [2026-08-17] tool | 청킹 제거 — AI 패스를 파일 기반 에이전트 실행으로
+- llm.py·markdown.py 삭제, agent.py 신설. 프롬프트가 본문 대신 경로를 나른다
+- 격리된 스크래치 디렉토리에 원문을 복사해 넣고 에이전트가 거기서만 작업
+- scrap이 모델 호출 0회가 됨 (태그는 summarize에 흡수)
+- Hermes: auxiliary task 등록 제거 — 도구가 더 이상 Hermes LLM을 쓰지 않음
+- 측정: 11,923자 2m15s / 40,162자 14m38s (~22s per 1,000자), 둘 다 완전 번역
+- translate_max_chars 120k → 80k: 타임아웃 안에 못 끝낼 원문을 미리 거절
+
 ## [2026-08-17] handoff | Phase 1 웹앱 인수인계 문서
 - wiki/meta/handoff-phase1-webapp.md 생성
 - Phase 0 완료 상태, Astro+Workers 확정 사항, 함정 3건, 누출 벡터 체크리스트

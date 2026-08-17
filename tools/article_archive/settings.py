@@ -64,65 +64,36 @@ DEFAULTS: Dict[str, Any] = {
     # flattening loses structure, so it is off here.
     "reformat_tables": False,
 
-    # ---- LLM passes -------------------------------------------------------
-    "summary_source_chars": 24000,
-    "summary_max_tokens": 1200,
-    "translate_max_chars": 120000,
-    # Source characters per translation request. Chunking exists because a
-    # response has an output ceiling — an agent harness does not lift that, it
-    # just truncates silently, which is why passes.py checks for it.
-    #
-    # Sized for an agent/large-context backend: fewer, bigger calls keep
-    # terminology consistent (each chunk is an independent session that cannot
-    # see the others' word choices) and stop paying agent scaffolding per
-    # chunk. Lower it for a small local model.
-    "translate_chunk_chars": 12000,
-    "translate_concurrency": 3,
-    "request_timeout": 240,
+    # ---- AI passes --------------------------------------------------------
+    # Every AI pass is one agent run over files in a scratch directory. There
+    # is no chunking and no token budget here: the prompt carries paths, the
+    # agent reads and writes the documents itself.
+    "agent_bin": "cline",
+    "agent_provider": "cline",
+    "agent_model": "cline:deepseek/deepseek-v4-flash",
+    # Tried in order when the preferred route fails. "<provider>|<model>" pins
+    # a provider; a bare value is a model id on agent_provider. The separator
+    # is "|" because model ids contain both "/" and ":".
+    "agent_fallbacks": [],
+    # A full-article translation is minutes, not seconds — a 12k-character
+    # article measured ~2m15s, and killing a long one halfway wastes the work
+    # already done.
+    "agent_timeout": 1800,
 
-    # Which backend answers. "auto" prefers the cline agent harness when it is
-    # on PATH, then Hermes' auxiliary client, then an OpenAI-compatible URL.
-    "llm_backend": "auto",
+    # Refuse a source that cannot finish inside agent_timeout, rather than
+    # spending the whole budget to fail at the end. Measured ~22s per 1,000
+    # characters, so 80k is ~29 minutes — keep these two in step if either
+    # moves.
+    "translate_max_chars": 80000,
 
-    # cline agent harness. Carries a free tier and exposes reasoning effort
-    # directly, which is why it is the default. It is invoked in a throwaway
-    # cwd — see llm.py — so auto-approved tool use cannot reach the wiki.
-    "cline_bin": "cline",
-    "cline_provider": "cline",
-    "cline_model": "cline:deepseek/deepseek-v4-flash",
-    "cline_timeout": 600,
-
-    # Route for the hermes/openai backends when one of them is primary.
-    "llm_provider": "copilot",
-    "llm_model": "claude-haiku-4.5",
-    # Tried in order after the primary backend fails, on whichever API backend
-    # is available. "<provider>/<model>" — only the first slash separates, so
-    # "openrouter/anthropic/claude-opus-4.8" works.
-    "llm_fallbacks": [
-        "copilot/claude-haiku-4.5",
-        "copilot/gpt-4.1",
-    ],
-
-    # Per-pass model and reasoning effort. Empty model = the backend default.
-    # Effort is applied on the cline backend (--thinking); the API backends
-    # have no equivalent knob and ignore it.
-    #   labels    — 3~6 tags from an opening slice. Nothing to reason about.
-    #   translate — mechanical, and it fans out into one call per chunk, so
-    #               effort here buys latency more than quality.
-    #   summary   — one call per article and the piece that gets published.
-    "labels_model": "",
-    "labels_thinking": "none",
+    # Per-pass model and reasoning effort. Empty model = agent_model.
+    #   translate — mechanical work over a long document; effort buys latency
+    #               more than quality.
+    #   summary   — one run per article, and the piece that gets published.
     "translate_model": "",
     "translate_thinking": "low",
     "summary_model": "",
     "summary_thinking": "high",
-
-    # Auxiliary task key used when the Hermes backend is available.
-    "aux_task": "article_archive_translate",
-    # OpenAI-compatible HTTP backend. Works with Ollama, OpenRouter, or
-    # anything speaking /v1/chat/completions.
-    "openai_base_url": "",
-    "openai_api_key_env": "ARTICLE_ARCHIVE_API_KEY",
 }
 
 _ENV_PREFIX = "ARTICLE_ARCHIVE_"

@@ -25,6 +25,10 @@ front end parses. Human output goes to stderr, so the two never mix.
 Every later pass takes that stem instead of the URL, so nothing is fetched
 twice. Keep it; the tool has no URL→stem index.
 
+**`scrap` makes no model call.** Extraction is deterministic scripting, and
+tags arrive later with the summary — archiving a link costs nothing but the
+fetch.
+
 ## Where things land, and why
 
 | Pass | File | Published? |
@@ -60,79 +64,81 @@ deleted, so the archive still shows a figure was there. On a diagram-heavy
 article that is a third of the payload, and the translator would otherwise be
 billed for tokens that can only come back as noise.
 
-## LLM backend
+## The AI passes are agent runs over files
 
-Detected, not configured — `llm_backend: auto` picks the first available:
+Each pass is **one** `cline` session. The prompt names paths, never content:
 
-1. **cline** — the `cline` CLI as an agent harness. Preferred: free tier, and
-   `--thinking` gives per-pass reasoning effort that a plain chat completion
-   has no knob for.
-2. **hermes** — `agent.auxiliary_client`, when this runs on Hermes'
-   interpreter.
-3. **openai** — any OpenAI-compatible `/v1/chat/completions`, when
-   `ARTICLE_ARCHIVE_OPENAI_BASE_URL` is set. Works with Ollama and OpenRouter.
-
-`scrap` and `show` need none of them.
-
-The primary backend is tried with its own model; `llm_fallbacks` is then walked
-on whichever API backend is available, so cline being rate-limited degrades to
-Copilot rather than to nothing. A refused route goes on a 10-minute cooldown —
-one long article fans out into a call per chunk, and without the memo a dead
-provider is re-probed every time. A route that hands back the source text
-instead of Korean counts as a failure: some models silently echo long inputs,
-which is worse than an error because it looks like success.
-
-**Running an agent to transform text needs one precaution.** cline is invoked
-with `--cwd` pointed at a throwaway directory and a system prompt forbidding
-tool use, so auto-approved tools can never reach the wiki. Do not remove that.
-
-Note the overhead: an agent harness carries ~4.5k input tokens of scaffolding
-per call. That is fine on a free tier and wasteful on a metered one — switch
-`llm_backend` if that changes.
-
-The route that answered is written into the file:
-
-```yaml
-summary:
-  updated: 2026-08-17T17:05:24+09:00
-  provider: cline
-  model: "cline:deepseek/deepseek-v4-flash"
-  backend: cline
-  thinking: high
 ```
+scratch/
+  source.md        <- written by the script
+  translation.md   <- written by the agent
+```
+
+The script copies the article body into a fresh scratch directory, tells the
+agent to read `./source.md` and write `./translation.md`, then reads the answer
+back and assembles the final document with proper frontmatter.
+
+This is why there is no chunking, no concurrency, and no token budget in the
+settings. Stuffing text into a prompt means fitting an output ceiling, which
+means splitting, which means one request per chunk — and every chunk is an
+independent session that cannot see the others' word choices, so terminology
+drifts across the article. Handing over a file removes the whole class of
+problem: the agent works through a long document the way a person would.
+
+**Isolation.** `--auto-approve` has to be on for a non-interactive run, so the
+agent gets a directory containing exactly what it needs and nothing it could
+damage. It never sees the repo — that is why the source is *copied* rather than
+pointed at in place. Do not "simplify" this by setting the agent's cwd to the
+wiki.
+
+Frontmatter stays code-owned. The agent writes prose; `documents.py` writes the
+schema. A model cannot drift the document format.
+
+### Checks on what comes back
+
+Truncation is the failure mode that matters: it leaves half an article in the
+archive with nothing to show anything went wrong. Two checks, structure first
+because it is the sharper signal — the translator is told to preserve markdown
+exactly, so a complete pass returns the same headings.
+
+| Check | Signal |
+|---|---|
+| truncated | output has < 60% of the source's headings, or < 25% of its characters |
+| untranslated | output equals input, or prose went in and no Hangul came out |
+
+Either one fails the route, which falls through to the next entry in
+`agent_fallbacks` and puts the failed one on a 10-minute cooldown.
+
+### Measured
+
+Full-article translation, `cline:deepseek/deepseek-v4-flash`, `--thinking low`:
+
+| Source | Time | Output ratio |
+|---|---|---|
+| 11,923 chars | 2m15s | 0.56 |
+| 40,162 chars | 14m38s | 0.74 |
+
+Roughly **22 seconds per 1,000 characters**, and there is no parallelism to
+hide it — one document, one run. That is the price of the trade: a chunked
+version of the same article would finish sooner but with terminology drifting
+between chunks.
+
+Two settings follow from that number and have to move together:
+`translate_max_chars` (80k ≈ 29 min) sits just under `agent_timeout` (30 min),
+so an article too long to finish is refused up front instead of failing after
+half an hour. The Hermes plugin allows 35 minutes so the tool's limit is the
+one that governs.
+
+Summarization is not affected — it is one pass regardless of length (~2 min).
 
 ## Per-pass model and effort
 
-Each pass has its own `<pass>_model` and `<pass>_thinking`. An empty model
-means the backend default. Effort applies on cline (`--thinking`
-`none|low|medium|high|xhigh`); the API backends have no equivalent and ignore
-it.
-
 | Pass | Default effort | Why |
 |---|---|---|
-| `labels` | `none` | 3–6 tags off an opening slice. Nothing to reason about. |
-| `translate` | `low` | Mechanical, and it fans out into one call per chunk — effort here buys latency more than quality. |
-| `summary` | `high` | One call per article, and the piece that gets published. |
+| `translate` | `low` | Mechanical work over a long document; effort buys latency more than quality. |
+| `summary` | `high` | One run per article, and the piece that gets published. |
 
-## Why translation still chunks
-
-An agent harness does not remove the need. cline emits its answer as message
-text, so a long article still hits an output ceiling — and it truncates
-*silently*, leaving half an article in the archive with nothing to show
-anything went wrong. `passes.py` therefore checks every returned chunk two
-ways: heading count against the source (the translator is told to preserve
-markdown exactly, so a complete pass returns the same headings) and a length
-floor at 25% for prose with no headings. A chunk that fails either is treated
-as a route failure and falls through the ladder.
-
-That guard is what makes big chunks safe, so they are big: 12,000 characters,
-where a 52k-character article splits into 5 requests instead of 18. Each chunk
-is an independent session that cannot see the others' word choices, so fewer
-chunks means more consistent terminology — and on an agent backend it also
-stops paying ~4.5k tokens of scaffolding eighteen times.
-
-Measured: an 11,923-character article translates complete in a single call,
-~2m15s, output 0.56× the source characters.
+`<pass>_model` overrides the model for that pass; empty means `agent_model`.
 
 ## Settings
 
@@ -148,15 +154,12 @@ template merges), or with `ARTICLE_ARCHIVE_<KEY>` environment variables.
 | `min_word_count` | `120` | Below this, retry extraction through the browser. |
 | `browser_fallback` | `true` | Allow the browser tier at all. |
 | `reformat_tables` | `false` | Flatten tables into fixed-width grids. Only useful for chat clients that cannot render them; a markdown file can. |
-| `llm_backend` | `auto` | Pin to `cline` / `hermes` / `openai` to skip detection. |
-| `cline_model` | `cline:deepseek/deepseek-v4-flash` | Model for the cline backend. |
-| `cline_timeout` | `600` | Per-call ceiling for the agent harness. |
-| `llm_provider` / `llm_model` | `copilot` / `claude-haiku-4.5` | Route when hermes/openai is primary. |
-| `llm_fallbacks` | `["copilot/claude-haiku-4.5", "copilot/gpt-4.1"]` | Tried in order after the primary backend fails. Only the first `/` separates provider from model. |
-| `<pass>_model` / `<pass>_thinking` | see above | Per-pass overrides for `labels`, `translate`, `summary`. |
-| `translate_chunk_chars` | `12000` | Source characters per translation request. See below. |
-| `translate_max_chars` | `120000` | Skip translation past this size. |
-| `summary_source_chars` | `24000` | Front slice sent to the summarizer. |
+| `agent_bin` | `cline` | The agent CLI. Must accept `-s`, `-m`, `-P`, `--thinking`, `--json`. |
+| `agent_provider` / `agent_model` | `cline` / `cline:deepseek/deepseek-v4-flash` | Preferred route. |
+| `agent_fallbacks` | `[]` | Tried in order. `"<provider>\|<model>"` pins a provider; a bare value is a model on `agent_provider`. The separator is `\|` because model ids contain both `/` and `:`. |
+| `agent_timeout` | `1800` | Per-run ceiling. A long article is minutes. |
+| `translate_max_chars` | `120000` | Refuse absurdly long sources. |
+| `<pass>_model` / `<pass>_thinking` | see above | Per-pass overrides for `translate`, `summary`. |
 | `xcom_expand_threads` | `false` | Follow a self-reply chain when archiving an X thread head. Costs one browser visit per X archive. |
 
 ## Install
@@ -165,7 +168,8 @@ template merges), or with `ARTICLE_ARCHIVE_<KEY>` environment variables.
 cd tools/article_archive && npm install    # defuddle
 ```
 
-Python is stdlib only — no venv, no pip.
+Python is stdlib only — no venv, no pip. The AI passes additionally need
+`cline` on PATH; `scrap`, `browser`, `xarticle` and `show` do not.
 
 ## Known gaps
 
@@ -174,3 +178,5 @@ Python is stdlib only — no venv, no pip.
   pipe table.
 - No URL→stem index. Re-scraping the same URL on a different day writes a
   second file; `/lint` is where that gets caught.
+- A scraped-but-never-summarized article has no tags, because labels ride
+  along with the summary.

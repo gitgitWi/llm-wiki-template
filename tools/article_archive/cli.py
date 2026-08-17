@@ -17,10 +17,9 @@ OpenAI-compatible endpoint. ``scrap`` and ``show`` work without either.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 if __package__ in (None, ""):
     # Run directly as a script: make the package importable so the relative
@@ -33,7 +32,7 @@ if __package__ in (None, ""):
     __package__ = _pkg_dir.name
     importlib.import_module(__package__)
 
-from . import documents, llm, passes
+from . import agent, documents, passes
 from .extractors import Article, ExtractionError, browser_reread, extract
 
 
@@ -84,7 +83,8 @@ def _load(stem_or_url: str) -> tuple[Optional[Article], Optional[str], Optional[
 # actions
 # --------------------------------------------------------------------------
 
-def _do_scrap(url: str, *, with_labels: bool) -> Dict[str, Any]:
+def _do_scrap(url: str) -> Dict[str, Any]:
+    """Extraction only — no model call. Tags arrive with the summary."""
     try:
         article = extract(url)
     except ExtractionError as exc:
@@ -92,20 +92,12 @@ def _do_scrap(url: str, *, with_labels: bool) -> Dict[str, Any]:
     except Exception as exc:  # a broken extractor must not look like a bad URL
         return {"ok": False, "action": "scrap", "url": url, "error": repr(exc)}
 
-    tags: List[str] = []
-    domains: List[str] = []
-    if with_labels and llm.backend_name() != "none":
-        tags, domains, _ = asyncio.run(passes.make_labels(article))
-
     stem = documents.make_stem(article)
-    written = documents.write_raw(article, stem=stem, tags=tags, domains=domains)
+    written = documents.write_raw(article, stem=stem)
     return {
         "ok": True,
         "action": "scrap",
         "stem": stem,
-        "tags": tags,
-        "domains": domains,
-        "llm_backend": llm.backend_name(),
         "files": [written.as_dict()],
         **_article_fields(article),
     }
@@ -116,16 +108,15 @@ def _do_summarize(target: str) -> Dict[str, Any]:
     if article is None:
         return {"ok": False, "action": "summarize", "error": error}
 
-    summary, route = asyncio.run(passes.summarize(article))
+    summary, tags, domains, route = passes.summarize(article)
     if not summary:
         return {
             "ok": False,
             "action": "summarize",
             "stem": stem,
-            "error": "summary unavailable — every LLM route refused",
+            "error": "summary unavailable — every agent route failed",
         }
 
-    tags, domains, _ = asyncio.run(passes.make_labels(article))
     written = documents.write_digest(
         article, summary, stem=stem, route=route, tags=tags, domains=domains
     )
@@ -148,13 +139,14 @@ def _do_translate(target: str) -> Dict[str, Any]:
     if article is None:
         return {"ok": False, "action": "translate", "error": error}
 
-    korean, route = asyncio.run(passes.translate(article))
+    korean, route = passes.translate(article)
     if not korean:
         return {
             "ok": False,
             "action": "translate",
             "stem": stem,
-            "error": "translation unavailable — refused, or over the size limit",
+            "error": "translation unavailable — every agent route failed, or "
+                     "the source is over the size limit",
         }
 
     written = documents.write_translation(article, korean, stem=stem, route=route)
@@ -246,9 +238,6 @@ def main(argv=None) -> int:
 
     scrap = sub.add_parser("scrap", parents=[common], help="extract a URL into raw/articles")
     scrap.add_argument("url")
-    scrap.add_argument(
-        "--no-labels", action="store_true", help="skip the tag/domain LLM pass"
-    )
 
     for name, help_text in (
         ("summarize", "write a Korean summary into wiki/digests"),
@@ -274,7 +263,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     if args.action == "scrap":
-        payload = _do_scrap(args.url, with_labels=not args.no_labels)
+        payload = _do_scrap(args.url)
     elif args.action == "summarize":
         payload = _do_summarize(args.target)
     elif args.action == "translate":

@@ -56,7 +56,9 @@ python3 tools/article_archive/cli.py scrap <url> --json     # -> raw/articles/<s
 python3 tools/article_archive/cli.py summarize <stem>        # -> wiki/digests/<stem>.md
 ```
 
-프론트엔드에 묶여 있지 않아서 `/ingest`(Claude Code)와 Discord 봇이 같은 도구를 쓰고 같은 파일을 만든다. LLM 백엔드는 감지된다 — Hermes 인터프리터면 그 auxiliary client를, 아니면 OpenAI 호환 엔드포인트를, 둘 다 없으면 추출만 동작한다.
+프론트엔드에 묶여 있지 않아서 `/ingest`(Claude Code)와 Discord 봇이 같은 도구를 쓰고 같은 파일을 만든다.
+
+**`scrap`은 모델을 호출하지 않는다.** 추출은 결정적 스크립팅이고, 요약·번역만 에이전트(`cline`) 세션 한 번으로 처리한다. 프롬프트에 본문을 싣는 대신 **격리된 작업 디렉토리에 파일을 넣고 경로만 알려주므로**, 청크를 나눌 일도 용어가 청크마다 달라질 일도 없다. 에이전트는 저장소를 보지 못한다.
 
 **원문과 전문 번역은 `raw/` 에, 요약은 `wiki/digests/` 에 쓴다.** 앞의 둘은 남의 글이고 전문 번역은 오히려 더 명확한 파생 저작물이라 공개 대상이 아니다. 요약은 내가 쓴 것이라 공개할 수 있다.
 

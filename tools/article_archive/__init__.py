@@ -5,4 +5,4 @@ CLI in ``cli.py``; ``/ingest`` in Claude Code drives the same entry points.
 Nothing in this package knows what a channel or a button is.
 """
 
-__all__ = ["documents", "extractors", "llm", "markdown", "passes", "settings"]
+__all__ = ["agent", "documents", "extractors", "passes", "settings"]

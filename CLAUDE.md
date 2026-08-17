@@ -128,7 +128,9 @@ python3 tools/article_archive/cli.py browser <stem> --json  # 추출이 빈약�
 python3 tools/article_archive/cli.py translate <stem>       # -> raw/articles/<stem>.ko.md
 ```
 
-도구의 `summarize` 는 에이전트가 없는 경로(Discord)용이다. **당신이 붙어 있을 때는 요약을 직접 쓴다** — 내 언어로 쓰고 기존 페이지와 엮는 일은 도구가 못 한다. 같은 도구를 Hermes의 Discord 플러그인이 함께 쓰므로, 인터페이스를 바꿀 때는 `tools/article_archive/README.md` 의 CLI 계약을 먼저 확인한다.
+`scrap` 은 모델을 호출하지 않는다 — 링크 하나 보관하는 데 드는 비용은 fetch뿐이다. 태그는 `summarize` 때 함께 붙는다.
+
+도구의 `summarize` 는 사람이 붙어 있지 않은 경로(Discord)용이다. **당신이 붙어 있을 때는 요약을 직접 쓴다** — 내 언어로 쓰고 기존 페이지와 엮는 일은 도구가 못 한다. 같은 도구를 Hermes의 Discord 플러그인이 함께 쓰므로, 인터페이스를 바꿀 때는 `tools/article_archive/README.md` 의 CLI 계약을 먼저 확인한다.
 
 ---
 
