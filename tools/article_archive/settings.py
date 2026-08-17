@@ -70,20 +70,49 @@ DEFAULTS: Dict[str, Any] = {
     "translate_max_chars": 120000,
     "translate_chunk_chars": 3500,
     "translate_concurrency": 3,
-    "translate_timeout": 240,
-    # Preferred route, then fallbacks in order. "<provider>/<model>" — only the
-    # first slash separates, so "openrouter/anthropic/claude-opus-4.8" works.
-    "llm_provider": "ollama-cloud",
-    "llm_model": "deepseek-v4-flash:0731",
+    "request_timeout": 240,
+
+    # Which backend answers. "auto" prefers the cline agent harness when it is
+    # on PATH, then Hermes' auxiliary client, then an OpenAI-compatible URL.
+    "llm_backend": "auto",
+
+    # cline agent harness. Carries a free tier and exposes reasoning effort
+    # directly, which is why it is the default. It is invoked in a throwaway
+    # cwd — see llm.py — so auto-approved tool use cannot reach the wiki.
+    "cline_bin": "cline",
+    "cline_provider": "cline",
+    "cline_model": "cline:deepseek/deepseek-v4-flash",
+    "cline_timeout": 600,
+
+    # Route for the hermes/openai backends when one of them is primary.
+    "llm_provider": "copilot",
+    "llm_model": "claude-haiku-4.5",
+    # Tried in order after the primary backend fails, on whichever API backend
+    # is available. "<provider>/<model>" — only the first slash separates, so
+    # "openrouter/anthropic/claude-opus-4.8" works.
     "llm_fallbacks": [
+        "copilot/claude-haiku-4.5",
         "copilot/gpt-4.1",
-        "ollama-cloud/gpt-oss:120b",
     ],
+
+    # Per-pass model and reasoning effort. Empty model = the backend default.
+    # Effort is applied on the cline backend (--thinking); the API backends
+    # have no equivalent knob and ignore it.
+    #   labels    — 3~6 tags from an opening slice. Nothing to reason about.
+    #   translate — mechanical, and it fans out into one call per chunk, so
+    #               effort here buys latency more than quality.
+    #   summary   — one call per article and the piece that gets published.
+    "labels_model": "",
+    "labels_thinking": "none",
+    "translate_model": "",
+    "translate_thinking": "low",
+    "summary_model": "",
+    "summary_thinking": "high",
+
     # Auxiliary task key used when the Hermes backend is available.
     "aux_task": "article_archive_translate",
-    # OpenAI-compatible HTTP backend, used when Hermes' auxiliary client is not
-    # importable. Works with Ollama, OpenRouter, or anything speaking
-    # /v1/chat/completions.
+    # OpenAI-compatible HTTP backend. Works with Ollama, OpenRouter, or
+    # anything speaking /v1/chat/completions.
     "openai_base_url": "",
     "openai_api_key_env": "ARTICLE_ARCHIVE_API_KEY",
 }

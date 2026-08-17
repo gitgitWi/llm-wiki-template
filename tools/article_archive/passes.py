@@ -114,6 +114,7 @@ async def make_labels(article: Article) -> Tuple[List[str], List[str], Optional[
             ],
             max_tokens=200,
             temperature=0.3,
+            **llm.pass_config("labels"),
         )
     except Exception as exc:
         logger.info("article-archive: label generation failed: %s", exc)
@@ -174,6 +175,7 @@ async def summarize(article: Article) -> Tuple[str, Optional[llm.LLMResult]]:
             ],
             max_tokens=int(settings.get("summary_max_tokens")),
             temperature=0.3,
+            **llm.pass_config("summary"),
         )
     except Exception as exc:
         logger.warning("article-archive: summary failed: %s", exc)
@@ -196,6 +198,7 @@ async def _translate_chunk(
                 # Korean output runs longer than English source; give it room.
                 max_tokens=max(1024, int(len(chunk) / 1.4)),
                 validate=lambda out, src=chunk: not _looks_untranslated(src, out),
+                **llm.pass_config("translate"),
             )
         except llm.LLMUnavailable:
             raise

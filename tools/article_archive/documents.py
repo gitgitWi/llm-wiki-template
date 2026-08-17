@@ -99,15 +99,10 @@ def _now() -> str:
 def _route_lines(prefix: str, route: Any, *, indent: str = "  ") -> List[str]:
     """`updated` plus which model produced this pass."""
     lines = [f"{indent}updated: {_now()}"]
-    provider = getattr(route, "provider", "") or ""
-    model = getattr(route, "model", "") or ""
-    backend = getattr(route, "backend", "") or ""
-    if provider:
-        lines.append(f"{indent}provider: {_scalar(provider)}")
-    if model:
-        lines.append(f"{indent}model: {_scalar(model)}")
-    if backend:
-        lines.append(f"{indent}backend: {_scalar(backend)}")
+    for field in ("provider", "model", "backend", "thinking"):
+        value = getattr(route, field, "") or ""
+        if value:
+            lines.append(f"{indent}{field}: {_scalar(value)}")
     return lines
 
 
@@ -121,6 +116,7 @@ def _frontmatter(
     title: Optional[str] = None,
     extra_blocks: Optional[Dict[str, List[str]]] = None,
     related: Optional[List[str]] = None,
+    created: str = "",
 ) -> str:
     today = datetime.now().strftime("%Y-%m-%d")
     lines = [
@@ -131,7 +127,7 @@ def _frontmatter(
         f"domains: {_seq(domains or [])}",
         f"tags: {_seq(tags or [])}",
         "status: living",
-        f"created: {today}",
+        f"created: {created or today}",
         f"updated: {today}",
         "source:",
         f"  url: {_scalar(article.url)}",
@@ -236,6 +232,20 @@ def read_article(stem: str) -> Optional[Article]:
 # writing
 # --------------------------------------------------------------------------
 
+def prior_meta(path: Path) -> Dict[str, Any]:
+    """Frontmatter already on disk at *path*, or ``{}``.
+
+    Re-running a pass rewrites the whole file, which would otherwise silently
+    undo a ``/publish`` — the digest would drop back to private, and the
+    original capture date would be lost.
+    """
+    try:
+        meta, _ = split_frontmatter(path.read_text(encoding="utf-8"))
+    except OSError:
+        return {}
+    return meta
+
+
 def raw_dir() -> Path:
     return settings.wiki_root() / str(settings.get("raw_dir"))
 
@@ -278,16 +288,19 @@ def write_raw(
     tags: Optional[List[str]] = None,
     domains: Optional[List[str]] = None,
 ) -> Written:
+    path = raw_dir() / f"{stem}.md"
+    prior = prior_meta(path)
     front = _frontmatter(
         article,
         doc_type="source",
         visibility=str(settings.get("raw_visibility")),
+        # A browser re-read replaces the text, not the day it was captured.
+        created=str(prior.get("created") or ""),
         tags=tags,
         domains=domains,
     )
     heading = f"# {article.title}" if article.title else ""
     body = "\n\n".join(p for p in (front, heading, article.content_md.strip()) if p.strip())
-    path = raw_dir() / f"{stem}.md"
     _write(path, body)
     return _written("raw", path)
 
@@ -318,10 +331,14 @@ def write_digest(
     tags: Optional[List[str]] = None,
     domains: Optional[List[str]] = None,
 ) -> Written:
+    path = digest_dir() / f"{stem}.md"
+    prior = prior_meta(path)
     front = _frontmatter(
         article,
         doc_type="source",
-        visibility=str(settings.get("digest_visibility")),
+        # A published digest stays published across a re-summarize.
+        visibility=str(prior.get("visibility") or settings.get("digest_visibility")),
+        created=str(prior.get("created") or ""),
         tags=tags,
         domains=domains,
         extra_blocks={"summary": _route_lines("summary", route)},
@@ -337,6 +354,5 @@ def write_digest(
     body = "\n\n".join(
         p for p in (front, heading, (summary or "").strip(), tail) if p.strip()
     )
-    path = digest_dir() / f"{stem}.md"
     _write(path, body)
     return _written("digest", path)
