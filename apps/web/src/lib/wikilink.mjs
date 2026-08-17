@@ -14,7 +14,8 @@ const WIKILINK = /\[\[([^[\]|]+?)(?:\|([^[\]]+?))?\]\]/g;
  * 링크가 하나도 없으면 `null` — 호출 측이 노드를 건드리지 않도록.
  *
  * @param {string} value
- * @param {(slug: string) => string | null} resolve 슬러그 → URL, 대상이 없으면 null
+ * @param {(slug: string) => { href: string, title: string } | null} resolve
+ *   슬러그 → 링크 정보. 대상이 없거나 비공개면 null.
  */
 export function splitWikilinks(value, resolve) {
   if (!value.includes('[[')) return null;
@@ -25,8 +26,11 @@ export function splitWikilinks(value, resolve) {
   for (const match of value.matchAll(WIKILINK)) {
     const [whole, rawTarget, rawLabel] = match;
     const target = rawTarget.trim();
-    const label = (rawLabel ?? rawTarget).trim();
-    const href = resolve(target);
+    const resolved = resolve(target);
+    const href = resolved?.href ?? null;
+    // 슬러그는 ASCII 인데 제목은 한글이다. `[[slug]]` 를 그대로 보여주면 문장 속에서
+    // 읽히지 않으므로 대상 문서의 제목으로 바꾼다. `|라벨` 을 쓴 경우는 그게 이긴다.
+    const label = (rawLabel ?? resolved?.title ?? rawTarget).trim();
 
     if (match.index > cursor) {
       nodes.push({ type: 'text', value: value.slice(cursor, match.index) });

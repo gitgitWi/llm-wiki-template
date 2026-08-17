@@ -4,24 +4,24 @@ import { WIKI_DIR } from './paths.mjs';
 import { scanDocs } from './scan-docs.mjs';
 import { splitWikilinks } from './wikilink.mjs';
 
-let cachedPublicSlugs = null;
+let cachedTargets = null;
 
 /**
- * 링크 대상이 될 수 있는 슬러그 집합 = **public 문서만**.
+ * 링크 대상 = **public 문서만**. 슬러그 → `{ href, title }`.
  *
  * private 문서로 링크를 걸지 않는 이유는 404 회피가 아니라 누출 방지다.
  * `href="/wiki/<private-slug>"` 가 public HTML에 박히면 슬러그가 그대로 새어나간다.
  * 미해결 링크는 링크가 아닌 텍스트로 남고, 남은 텍스트는 누출 가드가 잡는다.
  */
-function publicSlugs() {
-  if (cachedPublicSlugs === null) {
-    cachedPublicSlugs = new Set(
+function linkTargets() {
+  if (cachedTargets === null) {
+    cachedTargets = new Map(
       scanDocs(WIKI_DIR)
         .filter((doc) => doc.visibility === 'public')
-        .map((doc) => doc.slug),
+        .map((doc) => [doc.slug, { href: `/wiki/${doc.slug}`, title: doc.title }]),
     );
   }
-  return cachedPublicSlugs;
+  return cachedTargets;
 }
 
 /**
@@ -34,8 +34,7 @@ function publicSlugs() {
  * @param {{ resolve?: (slug: string) => string | null }} [options]
  */
 export function wikilinkPlugin(options = {}) {
-  const resolve =
-    options.resolve ?? ((slug) => (publicSlugs().has(slug) ? `/wiki/${slug}` : null));
+  const resolve = options.resolve ?? ((slug) => linkTargets().get(slug) ?? null);
 
   return defineMdastPlugin({
     name: 'wikilink',
