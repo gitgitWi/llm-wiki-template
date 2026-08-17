@@ -28,6 +28,12 @@ updated: 2026-08-17
 ## [2026-08-17] ingest | macOS on-device STT 조사
 - wiki/synthesis/on-device-stt-macos.md 생성 (기존 리서치 문서 이관)
 
+## [2026-08-17] tool | HTTP 상태 검사와 GitHub URL 자동 전환
+- 추출 전 ranged GET으로 4xx/5xx 거절 (404 페이지가 기사로 저장되던 문제)
+- 401/403/429는 봇 차단이라 브라우저 티어로 넘김
+- uri_mode: auto — 푸시된 파일은 GitHub blob URL, 아니면 로컬 경로.
+  owner/repo는 git remote에서 읽으므로 private fork도 설정 불필요
+
 ## [2026-08-17] tool | 저장 후 자동 커밋·푸시
 - vcs.py: commit → fetch → rebase → push. 충돌 시 rebase abort 후 커밋만 남김
 - pathspec으로 커밋 범위 제한 — 다른 staged 변경을 쓸어담지 않는다

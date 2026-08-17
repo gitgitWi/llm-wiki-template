@@ -33,7 +33,7 @@ if __package__ in (None, ""):
     __package__ = _pkg_dir.name
     importlib.import_module(__package__)
 
-from . import agent, documents, passes, vcs
+from . import agent, documents, passes, settings, vcs
 from .extractors import Article, ExtractionError, browser_reread, extract
 
 _COMMIT_LABELS = {
@@ -47,12 +47,25 @@ _COMMIT_LABELS = {
 
 def _sync(payload: Dict[str, Any]) -> None:
     """Commit and push whatever the action wrote, recording the outcome."""
-    paths = [Path(f["path"]) for f in payload.get("files") or []]
+    files = payload.get("files") or []
+    paths = [Path(f["path"]) for f in files]
     if not paths:
         return
     title = str(payload.get("title") or payload.get("stem") or "archive").strip()
     label = _COMMIT_LABELS.get(str(payload.get("action")), str(payload.get("action")))
-    payload["git"] = vcs.sync(paths, f"docs(archive): {title[:60]} — {label}")
+    git = vcs.sync(paths, f"docs(archive): {title[:60]} — {label}")
+    payload["git"] = git
+
+    # A file that reached the remote is better referred to by its GitHub URL —
+    # in the private repo that is the difference between a Discord card you can
+    # click and a path that means nothing on a phone. Only for what actually
+    # went out; unpushed files keep their repo-relative path.
+    base = git.get("blob_base")
+    if base and str(settings.get("uri_mode")) != "path":
+        pushed = set(git.get("files") or [])
+        for entry in files:
+            if entry.get("rel") in pushed:
+                entry["uri"] = f"{base}/{entry['rel']}"
 
 
 def _emit(payload: Dict[str, Any], as_json: bool) -> int:

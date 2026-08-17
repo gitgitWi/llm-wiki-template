@@ -91,6 +91,12 @@ pipes it back into defuddle. It only runs when the plain HTTP fetch came up
 short, so client-rendered pages are covered without every archive paying for a
 browser launch.
 
+Before any of it, one ranged GET checks the status. defuddle fetches the page
+itself and reports a 404 body as a successful parse, which is how a dead link
+ends up archived as an article titled "404 page not found". 401/403/429 are
+bot walls rather than missing pages, so those still fall through to the browser
+tier — a real fingerprint often gets where a script does not.
+
 Inline `<svg>` and `data:` URIs are replaced with a caption line rather than
 deleted, so the archive still shows a figure was there. On a diagram-heavy
 article that is a third of the payload, and the translator would otherwise be
@@ -185,8 +191,9 @@ template merges), or with `ARTICLE_ARCHIVE_<KEY>` environment variables.
 | `git_require_public` | `true` | Refuse to commit `visibility: private` documents. Turn off in a private fork. |
 | `git_remote` / `git_branch` | `origin` / current | Where to push. |
 | `digest_visibility` | `public` | What new digests are marked. `private` in a private fork. |
-| `uri_mode` | `path` | `github` reports blob URLs — set this in a private fork. |
-| `github_repo` / `github_branch` | `""` / `main` | Used by `uri_mode: github`. |
+| `uri_mode` | `auto` | `auto` reports a GitHub blob URL once the file is pushed, else the path. `path` / `github` force one. |
+| `github_repo` / `github_branch` | `""` / `main` | Only for `uri_mode: github`; `auto` reads owner/repo off the git remote. |
+| `check_http_status` | `true` | Reject 4xx/5xx before extracting. |
 | `min_word_count` | `120` | Below this, retry extraction through the browser. |
 | `browser_fallback` | `true` | Allow the browser tier at all. |
 | `reformat_tables` | `false` | Flatten tables into fixed-width grids. Only useful for chat clients that cannot render them; a markdown file can. |

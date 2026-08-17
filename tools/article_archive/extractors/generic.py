@@ -111,6 +111,57 @@ def _run(cmd, *, timeout: int, stdin: Optional[str] = None) -> subprocess.Comple
 
 
 # --------------------------------------------------------------------------
+# reachability
+# --------------------------------------------------------------------------
+
+# Bot walls, not missing pages. A browser with a real fingerprint often gets
+# through these, so they fall to the render tier instead of failing here.
+_SOFT_STATUSES = {401, 403, 429}
+
+
+def _http_status(url: str) -> Optional[int]:
+    """Status for *url*, or None when the check itself could not run.
+
+    defuddle fetches the page itself and reports a 404 body as a successful
+    parse — which is how "404 page not found" ends up archived as an article.
+    One ranged GET up front is cheap enough to stop that.
+    """
+    import urllib.error
+    import urllib.request
+
+    request = urllib.request.Request(
+        url,
+        method="GET",
+        # Ask for the first couple of KB; servers that ignore Range just send
+        # the body, which urlopen streams and we never read.
+        headers={"User-Agent": _UA, "Range": "bytes=0-2047"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:  # noqa: S310
+            return int(getattr(response, "status", 0) or 0) or None
+    except urllib.error.HTTPError as exc:
+        return int(exc.code)
+    except Exception as exc:
+        # DNS, TLS, timeout — inconclusive. Let the extractor try and report.
+        logger.debug("article-archive: status check failed for %s: %s", url, exc)
+        return None
+
+
+def _require_reachable(url: str) -> None:
+    if not settings.get("check_http_status"):
+        return
+    status = _http_status(url)
+    if status is None or status < 400:
+        return
+    if status in _SOFT_STATUSES:
+        logger.info(
+            "article-archive: %s returned HTTP %d, trying the browser tier", url, status
+        )
+        return
+    raise ExtractionError(f"HTTP {status} — 페이지를 가져올 수 없습니다")
+
+
+# --------------------------------------------------------------------------
 # defuddle
 # --------------------------------------------------------------------------
 
@@ -247,6 +298,8 @@ def extract_rendered(url: str) -> Article:
 
 
 def extract(url: str) -> Article:
+    _require_reachable(url)
+
     direct: Optional[Article] = None
     direct_error: Optional[str] = None
 

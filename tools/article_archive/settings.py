@@ -35,9 +35,12 @@ DEFAULTS: Dict[str, Any] = {
     "raw_dir": "raw/articles",
     "digest_dir": "wiki/digests",
     # How the tool reports where it put a file.
-    #   "path"   -> repo-relative path (this template)
-    #   "github" -> https://github.com/<repo>/blob/<branch>/<path> (private fork)
-    "uri_mode": "path",
+    #   "auto"   -> the GitHub blob URL once the file is actually pushed,
+    #               otherwise the repo-relative path. The owner/repo is read
+    #               off the git remote, so a private fork needs no config.
+    #   "path"   -> always the repo-relative path
+    #   "github" -> always a blob URL, built from github_repo below
+    "uri_mode": "auto",
     "github_repo": "",
     "github_branch": "main",
     # Default visibility written into new files.
@@ -74,6 +77,11 @@ DEFAULTS: Dict[str, Any] = {
     # agent-browser re-fetches it with a real Chromium.
     "min_word_count": 120,
     "browser_fallback": True,
+    # defuddle reports a 404 body as a successful parse, so a dead link gets
+    # archived as an article titled "404 page not found". One ranged GET up
+    # front stops that. 401/403/429 are bot walls rather than missing pages and
+    # still fall through to the browser tier.
+    "check_http_status": True,
     "defuddle_timeout": 60,
     "browser_timeout": 90,
     "fxtwitter_timeout": 20,

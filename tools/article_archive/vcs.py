@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import fcntl
 import logging
+import re
 import subprocess
 from contextlib import contextmanager
 from pathlib import Path
@@ -121,6 +122,20 @@ def _committable(root: Path, paths: List[Path]) -> tuple[List[str], List[str]]:
     return [p for p in relative if p not in ignored], why_not
 
 
+_GITHUB_RE = re.compile(r"github\.com[:/](?P<owner>[^/]+)/(?P<repo>[^/]+?)(?:\.git)?/?$")
+
+
+def remote_slug(root: Path, remote: str) -> str:
+    """``owner/repo`` for *remote*, or "" when it is not a GitHub remote.
+
+    Derived rather than configured so a private fork reports GitHub links
+    without anyone remembering to set the repo name.
+    """
+    url = _run(["remote", "get-url", remote], root=root, check=False)
+    match = _GITHUB_RE.search(url.strip())
+    return f"{match['owner']}/{match['repo']}" if match else ""
+
+
 def _branch(root: Path) -> str:
     configured = str(settings.get("git_branch") or "").strip()
     if configured:
@@ -218,6 +233,11 @@ def sync(paths: List[Path], message: str) -> Dict[str, Any]:
             _run(["push", remote, f"HEAD:{branch}"], root=root)
             result["pushed"] = True
             result["branch"] = branch
+            slug = remote_slug(root, remote)
+            if slug:
+                # Only set once the push succeeded — a blob URL for a commit
+                # that never left the laptop is a 404 with extra steps.
+                result["blob_base"] = f"https://github.com/{slug}/blob/{branch}"
     except (_GitError, subprocess.SubprocessError, OSError) as exc:
         # The file is written; git trouble must not look like a failed archive.
         result.setdefault("committed", False)
