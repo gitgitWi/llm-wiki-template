@@ -32,9 +32,23 @@ import Base from '../layouts/Base.astro';
 </style>
 
 <script>
-  // Pagefind 번들은 `astro build` 이후 pagefind CLI가 dist/ 에 넣는다.
-  // 빌드 그래프에 없는 파일이라 Vite가 해석하지 못하므로 런타임에 주입한다.
+  /**
+   * Pagefind 번들은 `astro build` **이후에** pagefind CLI 가 dist/ 에 넣는다.
+   * Vite 의 빌드 그래프에 없는 파일이라 `import()` 로 부르면 안 된다 — 번들러가
+   * preload 헬퍼로 감싸면서 존재하지 않는 청크를 참조하고, 그 ReferenceError 가
+   * "색인 없음" 으로 오인된다. 평범한 script 태그로 넣는다.
+   */
   const PAGEFIND_BASE = '/_pagefind';
+
+  function loadScript(src: string) {
+    return new Promise<void>((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = src;
+      el.addEventListener('load', () => resolve());
+      el.addEventListener('error', () => reject(new Error(`load failed: ${src}`)));
+      document.head.append(el);
+    });
+  }
 
   async function mount() {
     const container = document.getElementById('search');
@@ -46,7 +60,7 @@ import Base from '../layouts/Base.astro';
     );
 
     try {
-      await import(/* @vite-ignore */ `${PAGEFIND_BASE}/pagefind-ui.js`);
+      await loadScript(`${PAGEFIND_BASE}/pagefind-ui.js`);
     } catch {
       container.innerHTML =
         '<p class="empty">검색 색인이 없다. <code>npm run build</code> 로 색인을 만든 뒤 다시 열어보라.</p>';
