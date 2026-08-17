@@ -18,7 +18,7 @@ dist/
 .idea/
 *.swp
 
-# Obsidian 로컬 설정 (워크스페이스 상태는 공유하지 않음)
+# 마크다운 에디터 로컬 상태 (워크스페이스는 공유하지 않음)
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/cache

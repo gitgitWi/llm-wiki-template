@@ -1,6 +1,6 @@
 # llm-wiki-template
 
-LLM이 관리하는 개인 지식베이스 템플릿. 마크다운 + git만으로 동작하고, Obsidian과 Claude Code(또는 Codex)를 그대로 쓴다.
+LLM이 관리하는 개인 지식베이스 템플릿. 마크다운 + git만으로 동작하고, 위키 유지는 Claude Code(또는 Codex)가 맡는다. 파일은 평범한 마크다운 + `[[위키링크]]` 라서 제텔카스텐 방식을 지원하는 에디터에서 그대로 열린다 — 특정 앱에 묶이지 않는다.
 
 [Karpathy의 LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 패턴을 기반으로, Zettelkasten의 원자성·연결 원칙과 커뮤니티에서 나온 쓰기 게이트 규칙을 얹었다. 배경 조사는 [`wiki/synthesis/llm-wiki-methodology.md`](wiki/synthesis/llm-wiki-methodology.md), 구조 결정 근거는 [`wiki/meta/adr-0001-structure.md`](wiki/meta/adr-0001-structure.md) 참조.
 
@@ -70,8 +70,9 @@ cd my-wiki
 # 2. 예시 콘텐츠를 비운다 (원하면)
 rm wiki/synthesis/*.md
 
-# 3. Obsidian vault로 열고, Claude Code를 띄운다
-#    Web Clipper 저장 경로를 raw/articles/ 로 설정하면 캡처가 바로 꽂힌다
+# 3. 이 폴더에서 Claude Code를 띄운다
+#    그래프·백링크 탐색이 필요하면 제텔카스텐 방식 에디터로 같은 폴더를 열면 된다 (선택)
+#    브라우저 클리퍼 확장을 쓴다면 저장 경로를 raw/articles/ 로 맞춘다
 
 # 4. 첫 소스를 넣는다
 #    /ingest https://example.com/article
