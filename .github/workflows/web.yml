@@ -1,0 +1,74 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/web
+
+jobs:
+  build:
+    name: 빌드 · 누출 가드
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      - run: npm run check
+
+      # raw/ 는 gitignore 되어 있어 여기 체크아웃에는 존재하지 않는다.
+      # 로컬에서 되던 빌드가 CI에서만 "파일 없음"으로 깨진다면 대개 이것이다.
+      # `npm run build` 는 astro build → pagefind → 누출 가드 순으로 돈다.
+      - run: npm run build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: apps/web/dist/client
+          retention-days: 7
+
+  deploy:
+    name: Workers 배포
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      # 배포 잡에서 다시 빌드한다. 아티팩트를 내려받아 쓰면 누출 가드를 통과한
+      # 산출물과 실제로 올라가는 산출물이 같다는 보장이 아티팩트 무결성에 걸린다.
+      - run: npm run build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+
+      - name: wrangler deploy
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
