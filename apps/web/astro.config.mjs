@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 import { satteri } from '@astrojs/markdown-satteri';
 
+import { titleHeadingPlugin } from './src/lib/title-heading-plugin.mjs';
 import { wikilinkPlugin } from './src/lib/wikilink-plugin.mjs';
 
 // https://astro.build/config
@@ -30,7 +31,7 @@ export default defineConfig({
   //   라우트 핸들러에 인증을 넣어도 URL만 알면 받아진다.
   output: 'static',
   markdown: {
-    processor: satteri({ mdastPlugins: [wikilinkPlugin()] }),
+    processor: satteri({ mdastPlugins: [titleHeadingPlugin(), wikilinkPlugin()] }),
     shikiConfig: { themes: { light: 'github-light', dark: 'github-dark' } },
   },
 });
