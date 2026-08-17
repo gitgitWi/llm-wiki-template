@@ -1,0 +1,69 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Pagefind가 색인할 본문 범위. 목록·검색 페이지처럼 색인할 게 없으면 false. */
+  indexable?: boolean;
+}
+
+const { title, description, indexable = true } = Astro.props;
+const pathname = Astro.url.pathname;
+
+const SITE_NAME = 'LLM Wiki';
+const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`;
+
+const nav = [
+  { href: '/wiki/', label: '문서' },
+  { href: '/graph', label: '그래프' },
+  { href: '/search', label: '검색' },
+];
+
+const isCurrent = (href: string) =>
+  href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href);
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <meta property="og:title" content={fullTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap.xml" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell site-header__inner">
+        <a class="site-header__brand" href="/">{SITE_NAME}</a>
+        <nav class="site-header__nav" aria-label="주요">
+          {
+            nav.map((item) => (
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </header>
+
+    <main class="shell" data-pagefind-body={indexable ? '' : undefined}>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell">
+        <p>
+          공개된 <code>wiki/</code> 페이지만 보여준다. 원문(<code>raw/</code>)과 개인 노트는 빌드에
+          포함되지 않는다.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+---
+import { DOMAINS } from '../../content.config';
+import DocList from '../../components/DocList.astro';
+import Base from '../../layouts/Base.astro';
+import { DOMAIN_LABELS, getPublicDocs } from '../../lib/wiki';
+
+/** 닫힌 어휘라 문서가 0건인 분야도 페이지를 만든다 — 내비게이션이 404로 끊기지 않게. */
+export async function getStaticPaths() {
+  const docs = await getPublicDocs();
+  return DOMAINS.map((domain) => ({
+    params: { domain },
+    props: { domain, docs: docs.filter((doc) => doc.data.domains.includes(domain)) },
+  }));
+}
+
+const { domain, docs } = Astro.props;
+---
+
+<Base
+  title={`${DOMAIN_LABELS[domain]} 분야`}
+  description={`${DOMAIN_LABELS[domain]} 분야의 공개 위키 문서 ${docs.length}건.`}
+  indexable={false}
+>
+  <h1 class="page-title">{DOMAIN_LABELS[domain]}</h1>
+  <p class="lede">
+    <code>domains: [{domain}]</code> 로 표시된 공개 문서 {docs.length}건. 한 문서가 여러 분야에 걸칠
+    수 있다.
+  </p>
+
+  <DocList docs={docs} empty="이 분야에 공개된 문서가 아직 없다." />
+
+  <h2 class="section-title">다른 분야</h2>
+  <ul class="chips">
+    {
+      DOMAINS.filter((other) => other !== domain).map((other) => (
+        <li>
+          <a class="chip" href={`/domains/${other}`}>
+            {DOMAIN_LABELS[other]}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

@@ -1,0 +1,47 @@
+---
+import type { Doc } from '../lib/wiki';
+import { DOMAIN_LABELS, formatDate } from '../lib/wiki';
+
+interface Props {
+  docs: Doc[];
+  empty?: string;
+}
+
+const { docs, empty = '아직 없음.' } = Astro.props;
+---
+
+{
+  docs.length === 0 ? (
+    <p class="empty">{empty}</p>
+  ) : (
+    <ul class="doc-list">
+      {docs.map((doc) => (
+        <li>
+          <div class="doc-item__head">
+            <a class="doc-item__title" href={`/wiki/${doc.id}`}>
+              {doc.data.title}
+            </a>
+            {doc.data.domains.map((domain) => (
+              <a class="chip chip--domain" href={`/domains/${domain}`}>
+                {DOMAIN_LABELS[domain]}
+              </a>
+            ))}
+            <time class="doc-item__meta" datetime={doc.data.updated.toISOString()}>
+              {formatDate(doc.data.updated)}
+            </time>
+          </div>
+          {doc.data.tags.length > 0 && (
+            <p class="doc-item__tags">
+              {doc.data.tags.map((tag, i) => (
+                <>
+                  {i > 0 && ' · '}
+                  <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>
+                </>
+              ))}
+            </p>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}

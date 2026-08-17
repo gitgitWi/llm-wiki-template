@@ -1,0 +1,28 @@
+---
+import DocList from '../../components/DocList.astro';
+import Base from '../../layouts/Base.astro';
+import { countBy, getPublicDocs } from '../../lib/wiki';
+
+/**
+ * tags 는 열린 어휘라 **public 문서에 실제로 붙은 태그만** 경로가 된다.
+ * private 문서의 태그로 페이지를 만들면 태그 이름 자체가 새어나간다.
+ */
+export async function getStaticPaths() {
+  const docs = await getPublicDocs();
+  return [...countBy(docs, 'tags').keys()].map((tag) => ({
+    params: { tag },
+    props: { tag, docs: docs.filter((doc) => doc.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag, docs } = Astro.props;
+---
+
+<Base title={`#${tag}`} description={`#${tag} 태그가 붙은 공개 문서 ${docs.length}건.`} indexable={false}>
+  <h1 class="page-title">#{tag}</h1>
+  <p class="lede">이 태그가 붙은 공개 문서 {docs.length}건.</p>
+
+  <DocList docs={docs} />
+
+  <p class="card__meta"><a href="/wiki/">전체 태그 보기</a></p>
+</Base>
