@@ -45,7 +45,18 @@ _아직 없음._
 | 페이지 | 요약 |
 |---|---|
 | [[adr-0001-structure]] | 3계층 구조, 분야 분류를 frontmatter로 두는 결정, 공개/비공개 분리와 웹앱 아키텍처 |
-| [[handoff-phase1-webapp]] | Phase 1 웹앱 인수인계 + **구현 결과(§9)** — 인수인계와 실제가 달랐던 것 5건, Phase 2를 위해 지켜둔 것 |
+<<<<<<< Updated upstream
+| [[adr-0001-structure]] | 3계층 구조, 분야 분류를 frontmatter로 두는 결정, 공개/비공개 분리와 웹앱 아키텍처 |
+
+---
+
+## 개발 · 과제
+
+| 문서 | 요약 |
+|---|---|
+| [구현 현황](../.dev/llm-wiki-setup/260817-implementation-status.md) | plan 대비 진행률, Phase 1~3 미완료 항목, 잡힌 함정 |
+| [Phase 1 리뷰](../.dev/llm-wiki-setup/260817-review-phase1-branch.md) | feat/phase1-webapp 브랜치 구현 검토 결과 |
+| [Phase 1 인수인계](../.dev/llm-wiki-setup/260817-handoff-phase1-webapp.md) | 웹앱 시작 전 읽을 인수인계 — 상태·스택·함정·누출 벡터 |
 
 ---
 
