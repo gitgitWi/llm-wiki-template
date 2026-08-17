@@ -70,3 +70,13 @@ updated: 2026-08-17
 ## [2026-08-17] adr | ADR-0001 구조 결정
 - wiki/meta/adr-0001-structure.md 생성
 - 소유권 3계층, domains/tags 이원화, raw 웹 노출 제외, public 템플릿 + private 콘텐츠 2-repo 채택
+
+## [2026-08-17] webapp | Phase 1 웹앱 구현
+- apps/web/ 신설 — Astro 7 + @astrojs/cloudflare v14, 전부 정적, 바인딩 0개
+- content collections 로 repo 루트 wiki/ 를 직접 읽음. zod 스키마가 frontmatter 검증기 겸용
+- 라우트: `/`, `/wiki/`, `/wiki/<slug>`, `/domains/<domain>`, `/tags/<tag>`, `/search`, `/graph`, sitemap
+- `[[wikilink]]` → `/wiki/<slug>` Sätteri mdast 플러그인. 라벨 없으면 대상 문서 제목으로 렌더
+- Pagefind 정적 검색 (한국어 확인), 위키링크 그래프 뷰, public 노드만 담은 graph.json
+- 누출 가드 `npm run guard` + GitHub Actions 빌드·배포 워크플로
+- 인수인계 문서와 달라진 점 3건은 handoff §9 에 기록
+- 부수 발견: 기존 문서 2건의 본문 H1 이 frontmatter title 과 불일치 (빌드 경고로 노출)

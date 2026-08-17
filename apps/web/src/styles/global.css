@@ -1,0 +1,418 @@
+:root {
+  color-scheme: light dark;
+
+  --bg: #fbfbfa;
+  --bg-raised: #ffffff;
+  --bg-sunken: #f2f1ee;
+  --border: #e2e0da;
+  --text: #23211d;
+  --text-muted: #6c6862;
+  --accent: #8a5a2b;
+  --accent-soft: #f0e7dc;
+
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  --measure: 68ch;
+  --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16151a;
+    --bg-raised: #1d1c22;
+    --bg-sunken: #121116;
+    --border: #302e38;
+    --text: #e6e3dd;
+    --text-muted: #9a958d;
+    --accent: #d8a15f;
+    --accent-soft: #2b2419;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+:not(pre) > code {
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+pre {
+  background: var(--bg-sunken) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .astro-code,
+  .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: transparent !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+  }
+}
+
+/* ── 레이아웃 ─────────────────────────────────────────── */
+
+.shell {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.25rem;
+  padding-block: 0.85rem;
+}
+
+.site-header__brand {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.site-header__nav {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-inline-start: auto;
+  font-size: 0.9rem;
+}
+
+.site-header__nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.site-header__nav a:hover,
+.site-header__nav a[aria-current='page'] {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+main {
+  padding-block: 2.5rem 4rem;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding-block: 1.5rem 2.5rem;
+}
+
+/* ── 공통 조각 ─────────────────────────────────────────── */
+
+.page-title {
+  font-size: clamp(1.7rem, 1.2rem + 1.8vw, 2.4rem);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
+
+.lede {
+  color: var(--text-muted);
+  margin: 0 0 2rem;
+  max-width: var(--measure);
+}
+
+.section-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 2.5rem 0 0.85rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chip {
+  display: inline-block;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: var(--bg-raised);
+}
+
+.chip:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.chip--domain {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.doc-list > li {
+  border-bottom: 1px solid var(--border);
+  padding-block: 0.7rem;
+}
+
+.doc-list > li:last-child {
+  border-bottom: none;
+}
+
+.doc-item__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.doc-item__title {
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.doc-item__title:hover {
+  color: var(--accent);
+}
+
+.doc-item__meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  margin-inline-start: auto;
+}
+
+.doc-item__tags {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+
+.doc-item__tags a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.doc-item__tags a:hover {
+  color: var(--accent);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  padding: 0.9rem 1rem;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.card:hover {
+  border-color: var(--accent);
+}
+
+.card__title {
+  font-weight: 600;
+}
+
+.card__meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── 문서 본문 ─────────────────────────────────────────── */
+
+.doc {
+  max-width: var(--measure);
+}
+
+.doc__meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.doc__source {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  margin-bottom: 2rem;
+}
+
+.doc__source dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0;
+}
+
+.doc__source dt {
+  color: var(--text-muted);
+}
+
+.doc__source dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin-top: 2.25rem;
+}
+
+.prose h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.prose blockquote {
+  margin-inline: 0;
+  padding-inline-start: 1rem;
+  border-inline-start: 3px solid var(--border);
+  color: var(--text-muted);
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.65rem;
+  text-align: start;
+  vertical-align: top;
+}
+
+.prose th {
+  background: var(--bg-sunken);
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-block: 2.5rem;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+.wikilink--unresolved {
+  color: var(--text-muted);
+  border-bottom: 1px dashed var(--border);
+  cursor: help;
+}
+
+.backlinks {
+  margin-top: 3rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+  max-width: var(--measure);
+}

@@ -1,0 +1,49 @@
+---
+import { DOMAINS } from '../content.config';
+import DocList from '../components/DocList.astro';
+import Base from '../layouts/Base.astro';
+import { DOMAIN_LABELS, countBy, getPublicDocs, groupByType } from '../lib/wiki';
+
+const docs = await getPublicDocs();
+const recent = docs.slice(0, 8);
+const domainCounts = countBy(docs, 'domains');
+const groups = groupByType(docs);
+---
+
+<Base
+  title="LLM Wiki"
+  description="한 번 정리한 지식을 계속 유지하는 개인 위키. 공개된 페이지만 여기에 있다."
+  indexable={false}
+>
+  <h1 class="page-title">LLM Wiki</h1>
+  <p class="lede">
+    질문할 때마다 원본을 다시 뒤지는 대신, 한 번 정리한 페이지를 읽고 갱신한다. 이 사이트에는 공개로
+    표시된 페이지만 올라온다.
+  </p>
+
+  <h2 class="section-title">분야</h2>
+  <ul class="cards">
+    {
+      DOMAINS.map((domain) => (
+        <li>
+          <a class="card" href={`/domains/${domain}`}>
+            <div class="card__title">{DOMAIN_LABELS[domain]}</div>
+            <div class="card__meta">{domainCounts.get(domain) ?? 0}건</div>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2 class="section-title">최근 갱신</h2>
+  <DocList docs={recent} empty="공개된 문서가 아직 없다." />
+
+  <h2 class="section-title">한눈에</h2>
+  <p class="card__meta">
+    공개 문서 {docs.length}건 · {
+      groups.map((group) => `${group.label} ${group.docs.length}`).join(' · ')
+    }
+    {' · '}
+    <a href="/wiki/">전체 목록</a> · <a href="/graph">그래프</a>
+  </p>
+</Base>

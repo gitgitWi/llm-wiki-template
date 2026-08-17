@@ -1,0 +1,58 @@
+---
+import GraphCanvas from '../components/GraphCanvas.astro';
+import Base from '../layouts/Base.astro';
+import { TAG_EDGE_MAX_DOCS, buildGraph, getPublicDocs } from '../lib/wiki';
+
+const docs = await getPublicDocs();
+const { nodes, links } = buildGraph(docs);
+const linkEdges = links.filter((link) => link.kind === 'link');
+const tagEdges = links.filter((link) => link.kind === 'tag');
+const orphans = nodes.filter((node) => node.degree === 0);
+---
+
+<Base title="그래프" description="공개 문서 사이의 연결 그래프." indexable={false}>
+  <h1 class="page-title">그래프</h1>
+  <p class="lede">
+    공개 문서 {nodes.length}개. <strong>실선 {linkEdges.length}개</strong>는 본문{' '}
+    <code>[[wikilink]]</code> 와 frontmatter <code>related:</code> — 직접 이어둔 연결이다.{' '}
+    <strong>점선 {tagEdges.length}개</strong>는 태그가 겹치는 문서끼리 이은 것으로, 명시적
+    연결은 아니고 주제가 겹친다는 신호다. 비공개 문서는 노드로도 나오지 않는다.
+  </p>
+
+  {/* 큰 데이터라 인라인하지 않고 graph.json 을 fetch한다. */}
+  <GraphCanvas src="/graph.json" toggle label="문서 연결 그래프" />
+
+  <noscript>
+    <p class="empty">
+      그래프는 스크립트로 그린다. <a href="/wiki/">문서 목록</a>에서 같은 내용을 볼 수 있다.
+    </p>
+  </noscript>
+
+  {
+    orphans.length > 0 && (
+      <>
+        <h2 class="section-title">연결이 없는 문서 · {orphans.length}</h2>
+        <p class="card__meta">
+          링크도 공유 태그도 없는 문서다. <code>[[링크]]</code> 를 하나 걸거나 태그를 맞추면
+          그래프에 들어온다.
+        </p>
+        <ul class="chips">
+          {orphans.map((node) => (
+            <li>
+              <a class="chip" href={`/wiki/${node.id}`}>
+                {node.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  <h2 class="section-title">태그 엣지 규칙</h2>
+  <p class="card__meta">
+    문서 {TAG_EDGE_MAX_DOCS}개보다 많이 붙은 태그는 <strong>관계가 아니라 분류</strong>로 보고
+    엣지를 만들지 않는다. 태그는 열린 어휘라 상한이 없으면 엣지 수가 문서 수의 제곱으로 자라고,
+    인기 태그 몇 개가 그래프를 덩어리로 뭉갠다.
+  </p>
+</Base>

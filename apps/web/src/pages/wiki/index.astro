@@ -1,0 +1,41 @@
+---
+import DocList from '../../components/DocList.astro';
+import Base from '../../layouts/Base.astro';
+import { countBy, getPublicDocs, groupByType } from '../../lib/wiki';
+
+const docs = await getPublicDocs();
+const groups = groupByType(docs);
+const tagCounts = countBy(docs, 'tags');
+---
+
+<Base title="문서" description="공개된 위키 페이지 전체 목록." indexable={false}>
+  <h1 class="page-title">문서</h1>
+  <p class="lede">공개 문서 {docs.length}건. 타입별로 묶고, 각 묶음은 갱신일 내림차순이다.</p>
+
+  {
+    groups.map((group) => (
+      <section>
+        <h2 class="section-title">
+          {group.label} · {group.docs.length}
+        </h2>
+        <DocList docs={group.docs} />
+      </section>
+    ))
+  }
+
+  {docs.length === 0 && <p class="empty">공개된 문서가 아직 없다.</p>}
+
+  <h2 class="section-title">태그</h2>
+  <ul class="chips">
+    {
+      [...tagCounts].map(([tag, count]) => (
+        <li>
+          <a class="chip" href={`/tags/${encodeURIComponent(tag)}`}>
+            #{tag} <span aria-hidden="true">·</span> {count}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  {tagCounts.size === 0 && <p class="empty">아직 없음.</p>}
+</Base>

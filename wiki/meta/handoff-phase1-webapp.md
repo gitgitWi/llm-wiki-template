@@ -41,15 +41,17 @@ related: ["[[adr-0001-structure]]"]
 
 **목표**: `*.workers.dev` 에서 public 문서를 읽고 그래프를 탐색할 수 있다. 인증은 Phase 2다.
 
-- [ ] `apps/web` — Astro + `@astrojs/cloudflare`, Workers 배포
-- [ ] content collections + zod 스키마 (= frontmatter 검증기 겸용)
-- [ ] `[[wikilink]]` → `/wiki/<slug>` remark 플러그인
-- [ ] public 문서 목록·상세 렌더, `domains` 기반 내비게이션
-- [ ] Pagefind 정적 검색
-- [ ] 그래프 뷰 — v1은 graphify HTML 산출물 임베드로 충분
-- [ ] 누출 가드 CI (§5)
+- [x] `apps/web` — Astro + `@astrojs/cloudflare`, Workers 배포
+- [x] content collections + zod 스키마 (= frontmatter 검증기 겸용)
+- [x] `[[wikilink]]` → `/wiki/<slug>` 플러그인
+- [x] public 문서 목록·상세 렌더, `domains` 기반 내비게이션
+- [x] Pagefind 정적 검색
+- [x] 그래프 뷰
+- [x] 누출 가드 CI (§5)
 
 **Phase 1에서 하지 않는 것**: 인증, private 문서 노출, 웹 편집, 임베딩. 전부 Phase 2~3.
+
+> **§3~4의 확정 사항 일부가 실제와 어긋났다.** 그대로 따라 하기 전에 [§9](#9-phase-1-구현-결과)를 읽는다.
 
 ---
 
@@ -183,4 +185,78 @@ gh repo create wiki --private --source=. --push --remote=origin
 
 - 커스텀 도메인 없음 — `*.workers.dev` 로 진행하기로 되어 있다. 나중에 붙이면 OAuth 콜백 URL을 함께 바꿔야 한다.
 - `domains` 닫힌 어휘(`ai` `dev` `career` `product` `infra` `misc`)가 내비게이션 구조를 정한다. 늘리려면 `CLAUDE.md` §2와 `tools/article_archive/passes.py` 의 `DOMAINS` 를 **함께** 고쳐야 한다.
-- 그래프 뷰 v2(sigma.js 네이티브)로 갈 때 `graph.json` 을 public 노드만 남기고 필터링하는 단계가 필요하다.
+- ~~그래프 뷰 v2(sigma.js 네이티브)로 갈 때 `graph.json` 을 public 노드만 남기고 필터링하는 단계가 필요하다.~~ → §9-3 참조. 처음부터 public 노드만 담게 만들었다.
+
+---
+
+## 9. Phase 1 구현 결과
+
+앱은 `apps/web/` 에 있고, 모듈 배치와 로컬 실행법은 `apps/web/README.md` 에 있다.
+여기에는 **위 §3~4 에 "확인된 사실" 로 적어둔 것 중 실제와 달랐던 것**만 적는다.
+
+### 1. Astro 7 의 기본 마크다운 처리기는 remark 가 아니라 Sätteri 다
+
+§4 는 `[[wikilink]]` 를 remark 플러그인으로 처리하라고 적어뒀지만, Astro 7 에서
+`markdown.remarkPlugins` 는 그냥 동작하지 않는다. `@astrojs/markdown-remark` 를
+따로 깔아 unified 파이프라인으로 되돌리거나, Sätteri mdast 플러그인으로 옮겨야 한다.
+
+후자를 택했다. API 가 remark 와 닮아 있고(방문자 함수 + 컨텍스트), 되돌리는 쪽은
+기본값에서 멀어지는 선택이라 나중에 갈아엎을 일이 남는다.
+
+부수 효과 하나가 오히려 이득이었다: `code`·`inlineCode` 가 별도 노드 타입이라
+문서에 쓴 `[[wikilink]]` **예시 문법이 실제 링크로 바뀌지 않는다.** 이 저장소 문서
+대부분이 위키링크 문법을 설명하고 있어서 실제로 걸렸을 함정이다.
+
+### 2. `wrangler.jsonc` 의 `main` 은 `dist/_worker.js/index.js` 가 아니다
+
+§3 에 적어둔 설정은 어댑터 v12 이하 기준이다. v13+ 는 통합 엔트리포인트를 쓴다:
+
+```jsonc
+"main": "@astrojs/cloudflare/entrypoints/server"
+```
+
+`dist/_worker.js/index.js` 를 가리키면 **빌드 전에는 그 파일이 없어서** wrangler 가
+설정을 읽는 단계에서 먼저 죽는다. 빌드가 산출물을 만들기 전에 설정 검증이 돈다.
+
+산출물 경로도 `dist/` 가 아니라 `dist/client/` + `dist/server/` 다. Pagefind 색인과
+누출 가드가 볼 곳은 `dist/client` 다.
+
+추가로 어댑터 기본값이 KV(세션)·Images 바인딩을 요구한다. 전부 정적인 Phase 1 에는
+프로비저닝할 리소스를 남길 이유가 없어 `session: false` 와 `imageService: 'compile'`
+로 껐다. 배포 시 바인딩 0개다.
+
+### 3. 그래프는 graphify 임베드 대신 위키링크에서 직접 만든다
+
+§2 는 v1 을 graphify HTML 산출물 임베드로 잡아뒀는데, `graphify-out/` 은 재생성
+가능한 산출물이라 gitignore 되어 있다. **CI 체크아웃에 없으니 거기서 빌드가 깨진다** —
+§3 이 `raw/` 에 대해 경고한 것과 같은 함정이다.
+
+본문 `[[wikilink]]` 와 frontmatter `related:` 에서 직접 그래프를 만든다. 의존이
+사라지고, §8 이 v2 조건으로 적어둔 "public 노드만 남긴 `graph.json`" 이 처음부터
+만들어진다. canvas + d3-force, 노드 드래그·클릭 이동.
+
+### 4. prerender 는 workerd 가 아니라 Node 에서 돌려야 한다
+
+콘텐츠가 앱 바깥(repo 루트 `wiki/`)에 있어 prerender 중에 파일시스템을 읽는다.
+어댑터 기본값인 workerd 에는 `node:fs` 가 없어 정적 경로 생성 단계에서 죽는다.
+`cloudflare({ prerenderEnvironment: 'node' })` 로 해결된다.
+
+같은 이유로 **페이지가 import 하는 모듈에는 `node:*` 를 두면 안 된다.** 슬러그 규칙이
+`node:path` 를 쓰던 것 하나 때문에 빌드 전체가 멈췄다. 그래서 `slug.mjs`(순수)와
+`paths.mjs`(파일시스템)가 나뉘어 있다 — 다시 합치면 같은 자리에서 깨진다.
+
+### 5. 부수 발견 — 문서 제목이 두 군데에 있고 서로 다르다
+
+위키 문서는 frontmatter `title` 과 본문 첫 `# H1` 을 둘 다 갖는데, 기존 문서 2건이
+서로 다른 값이었다. 인덱스·검색·그래프·OG 가 전부 frontmatter 를 쓰므로 렌더링도
+frontmatter 를 쓰고 본문 H1 을 뺀다. 불일치는 빌드 경고로 띄운다 — `/lint` 가
+점검할 항목으로 남겨둘 만하다.
+
+### Phase 2 를 위해 지금 지켜둔 것
+
+- `/wiki/[slug]` 는 **public 전용**이다. private 문서를 여기 끼워 넣으면 안 된다
+  (§4 의 Static Assets 함정). `prerender = false` 인 별도 prefix 로 분리한다.
+- 렌더링 경로는 전부 `getPublicDocs()` 하나를 통과한다. 인증을 붙일 때 손댈 곳이
+  라우트마다 흩어져 있지 않다.
+- 누출 가드는 라우트별이 아니라 `dist/client` **전체를 문자열로 훑는다.** Phase 2 에서
+  새 산출물(예: private 목록 JSON)이 생겨도 자동으로 검사 범위에 들어온다.
