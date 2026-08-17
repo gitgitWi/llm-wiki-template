@@ -26,7 +26,7 @@ argument-hint: <파일경로 | 슬러그>
 - `visibility: public` 으로 변경
 - `updated` 를 오늘 날짜로 갱신
 - `wiki/index.md` 에 공개 표시가 필요하면 반영
-- `wiki/log.md` 에 기록:
+- `.dev/log.md` 맨 위에 기록 (최신순):
 
 ```markdown
 ## [YYYY-MM-DD] publish | <문서 제목>

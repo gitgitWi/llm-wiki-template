@@ -32,7 +32,7 @@
 | `wiki/synthesis/` | 비교·종합, 그리고 **좋은 질의응답을 저장한 페이지** |
 | `wiki/meta/` | ADR — 구조·규칙 변경 결정 기록 |
 | `wiki/index.md` | 전체 카탈로그. **모든 쿼리의 진입점** |
-| `wiki/log.md` | append-only 이벤트 로그 |
+| `.dev/log.md` | 개발 로그 — 최신이 맨 위, 새 항목은 맨 위에 삽입 |
 
 ---
 
@@ -74,7 +74,7 @@ related: ["[[other-page]]"]      # 관련 문서 위키링크
 3. **`visibility` 기본값은 `private`.** 확신이 없으면 `private`. 공개 전환은 `/publish`로만.
 4. **회사 내부 정보 반입 금지.** 회사 문서·코드·고객 정보·비공개 인사 정보는 이 저장소에 저장하지 않는다. 사용자가 붙여넣더라도 저장 전에 경고한다.
 5. **파일명은 ASCII kebab-case 슬러그.** 한글은 `title:` 에만 쓴다. (URL 인코딩 깨짐·링크 파손 방지)
-6. **`index.md`·`log.md`는 모든 작업 후 갱신한다.**
+6. **`index.md`·`.dev/log.md`는 모든 작업 후 갱신한다.**
 7. **모순은 확정하지 않는다.** 아래 §5 참조.
 
 ---
@@ -96,7 +96,7 @@ related: ["[[other-page]]"]      # 관련 문서 위키링크
 | 유형 | 처리 |
 |---|---|
 | **재도출 가능** — 요약, 태그, 분류, 크로스링크 | **자유롭게 자동 작성** |
-| **되돌릴 수 있음** — 기존 위키 페이지 구조 변경 | 작성하되 log에 남긴다 |
+| **되돌릴 수 있음** — 기존 위키 페이지 구조 변경 | 작성하되 `.dev/log.md`에 남긴다 |
 | **비가역적이거나 사람에 대한 주장** — 파일 삭제, 인물 평가, 사용자 판단 서술 | **제안만 하고 승인 대기** |
 
 **모순 처리의 이원화:**
@@ -111,7 +111,7 @@ related: ["[[other-page]]"]      # 관련 문서 위키링크
 
 | 커맨드 | 요약 |
 |---|---|
-| `/ingest <url\|path>` | 소스를 raw에 저장 → digest 작성 → 관련 페이지 갱신 → index·log 갱신 |
+| `/ingest <url\|path>` | 소스를 raw에 저장 → digest 작성 → 관련 페이지 갱신 → index·.dev/log 갱신 |
 | `/query <question>` | index → 관련 페이지 드릴다운 → 인용 포함 답변 → **좋은 답변은 synthesis에 저장** |
 | `/lint` | 고아 페이지·모순·낡은 주장·frontmatter 누락 점검 |
 | `/publish <path>` | 공개 전 체크리스트 후 `visibility: public` 전환 |
@@ -136,11 +136,11 @@ python3 tools/article_archive/cli.py translate <stem>       # -> raw/articles/<s
 
 ---
 
-## 7. `index.md` 와 `log.md`
+## 7. `index.md` 와 `.dev/log.md`
 
 **`index.md`** — 위키 전체 카탈로그. 카테고리별로 페이지 링크 + 한 줄 요약. 쿼리 시 먼저 읽는 파일이므로 항상 최신이어야 한다. 페이지를 만들거나 지우면 즉시 반영한다.
 
-**`log.md`** — append-only. 형식을 지켜야 유닉스 도구로 파싱된다:
+**`.dev/log.md`** — 이 저장소 전체의 개발·운영 로그. `wiki/` 콘텐츠가 아니라 개발 기록이므로 `.dev/` 에 둔다. 형식은 유닉스 도구로 파싱되어야 한다:
 
 ```markdown
 ## [2026-08-17] ingest | Karpathy LLM Wiki gist
@@ -149,7 +149,7 @@ python3 tools/article_archive/cli.py translate <stem>       # -> raw/articles/<s
 - wiki/concepts/knowledge-compounding.md 갱신
 ```
 
-기존 항목은 수정하지 않고 **아래에 덧붙이기만** 한다.
+**최신이 맨 위다.** 새 항목은 가장 위에 삽입한다. 기존 항목은 수정하지 않는다. 조회는 `grep "^## \[" .dev/log.md | head -5`.
 
 ---
 

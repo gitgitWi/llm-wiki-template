@@ -39,7 +39,7 @@ source:
 | `tools/article_archive` 수집 파이프라인 | ✅ | scrap·summarize·translate·browser CLI |
 | digest 페이지 4건 생성 | ✅ | llm-wiki, stripe-job, pelicans, 2024-llms |
 | ADR-0001 구조 결정 | ✅ | wiki/meta/adr-0001-structure.md |
-| `index.md`·`log.md` | ✅ | 인덱스와 이벤트 로그 모두 작성됨 |
+| `index.md`·`.dev/log.md` | ✅ | 인덱스와 이벤트 로그 모두 작성됨 (2026-08-18 log를 .dev/ 로 이동) |
 | Obsidian Web Clipper 설정 안내 | ⚠️ | README에 언급되나 실제 설정은 private fork 시점 |
 
 ### Phase 0에서 누락된 것

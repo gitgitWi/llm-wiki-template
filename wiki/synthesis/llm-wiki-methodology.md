@@ -45,7 +45,7 @@ related: ["[[adr-0001-structure]]"]
 
 ### 인덱싱/로깅 2개 특수 파일
 - **index.md**(내용 중심): 위키 전체 카탈로그. 각 페이지 링크·한 줄 요약·메타데이터(날짜·소스 수). 카테고리별(엔티티/개념/소스) 정리. 모든 ingest마다 갱신. 질의 시 index 먼저 읽고 관련 페이지 드릴다운. **중간 규모(~100소스, 수백 페이지)에서 임베딩 RAG 인프라 없이도 잘 동작**.
-- **log.md**(시간순): append-only 이벤트 기록(ingest/query/lint). 일관된 접두사(예: `## [2026-04-02] ingest | Article Title`) 쓰면 유닉스 도구로 파싱 가능(예: `grep "^## \[" log.md | tail -5`).
+- **log.md**(최신순): 이벤트 기록(ingest/query/lint). 이 저장소에서는 `wiki/` 밖 `.dev/log.md` 에 둔다(콘텐츠가 아닌 개발·운영 로그). 일관된 접두사(예: `## [2026-04-02] ingest | Article Title`) 쓰면 유닉스 도구로 파싱 가능(예: `grep "^## \[" .dev/log.md | head -5`).
 
 ### 팁
 - **Obsidian Web Clipper**(브라우저 확장)로 웹 기사를 마크다운으로 변환해 raw에 넣기.
@@ -200,7 +200,7 @@ related: ["[[adr-0001-structure]]"]
 1. **raw는 절대 수정 금지** — 위키만 쓴다.
 2. **원자성**: 페이지 하나 = 개념/엔티티 하나. 너무 크면 쪼갠다.
 3. **자기 언어**: 소스 요약은 내 언어로 재작성(복붙 금지), 인용은 raw 링크로.
-4. **인덱스/로그 갱신**: 모든 ingest/query/lint 후 index.md, log.md 갱신.
+4. **인덱스/로그 갱신**: 모든 ingest/query/lint 후 index.md, `.dev/log.md`(최신순, 맨 위 삽입) 갱신.
 5. **쓰기 게이트(canonical/derived)**:
    - 재도출 가능/되돌릴 수 있는 것(draft, 분류, 태그) → 자동 작성 OK.
    - 비가역적이거나 사람에 대한 주장(삭제, 개인 판단 서술) → **제안만 하고 승인 대기**(gardener 루프).

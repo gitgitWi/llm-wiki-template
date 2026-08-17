@@ -27,11 +27,11 @@ index에서 관련 페이지를 고르고 드릴다운한다. 필요하면 링�
 - `type: synthesis`, `visibility: private` (기본값)
 - 근거가 된 페이지들과 양방향 `[[링크]]`
 - `wiki/index.md` 에 추가
-- `wiki/log.md` 에 추가:
+- `.dev/log.md` 맨 위에 추가 (최신순):
 
 ```markdown
 ## [YYYY-MM-DD] query | <질문 요약>
 - wiki/synthesis/<slug>.md 생성
 ```
 
-단순 사실 확인처럼 저장할 필요 없는 질문이면 log만 남기거나 그냥 답하고 끝낸다.
+단순 사실 확인처럼 저장할 필요 없는 질문이면 `.dev/log.md` 만 갱신하거나 그냥 답하고 끝낸다.

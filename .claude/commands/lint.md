@@ -42,7 +42,7 @@ argument-hint: [대상 폴더 (생략 시 전체)]
 
 마지막에 **다음에 넣으면 좋을 소스**와 **던져볼 만한 질문**을 제안한다.
 
-작업 후 `wiki/log.md` 에 기록:
+작업 후 `.dev/log.md` 맨 위에 기록 (최신순):
 
 ```markdown
 ## [YYYY-MM-DD] lint | <대상>

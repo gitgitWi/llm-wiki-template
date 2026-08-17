@@ -23,8 +23,9 @@ LLM이 관리하는 개인 지식베이스 템플릿. 마크다운 + git만으�
 ```
 raw/      articles/ threads/ videos/ papers/ jobs/ assets/   ← 소스 타입별 (공개 repo에선 gitignore)
 notes/    inbox/ ideas/ career/ logs/                        ← 목적별
-wiki/     index.md log.md digests/ concepts/ entities/ synthesis/ meta/
-tools/    article_archive/                                   ← URL → 마크다운 파이프라인
+wiki/     index.md digests/ concepts/ entities/ synthesis/ meta/   (log.md 는 .dev/ 로 이동)
+tools/    article_archive/
+.dev/     log.md llm-wiki-setup/                           ← 개발·운영 로그, Phase 문서
 CLAUDE.md                                                    ← 운영 스키마
 ```
 
