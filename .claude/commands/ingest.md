@@ -9,7 +9,19 @@ argument-hint: <url | 파일경로> [--public]
 
 ## 1. 저장
 
-소스 타입을 판별해 해당 폴더에 저장한다. **파일명은 ASCII kebab-case 슬러그 + `.md`.**
+URL이면 **추출 도구를 쓴다.** 직접 fetch해서 정리하지 말 것 — 도구가 defuddle·fxtwitter·브라우저 폴백을 이미 처리하고, 파일명·frontmatter도 스키마대로 써준다.
+
+```bash
+python3 tools/article_archive/cli.py scrap <url> --json
+```
+
+돌아온 JSON의 `stem`을 기억해둔다. 이후 단계에서 이 stem으로 파일을 찾는다.
+추출이 빈약하면(`word_count`가 비정상적으로 작으면) `cli.py browser <stem>` 으로 다시 읽는다.
+
+> 도구의 `summarize` 명령은 **쓰지 않는다.** 그건 에이전트가 없는 Discord 경로용이다.
+> 여기서는 아래 3번처럼 당신이 직접 요약을 쓴다 — 내 언어로 쓰고 기존 페이지와 엮는 건 도구가 못 하는 일이다.
+
+로컬 파일이거나 도구가 실패하면 아래 표대로 직접 저장한다. **파일명은 ASCII kebab-case 슬러그 + `.md`.**
 
 | 타입 | 저장 위치 |
 |---|---|
@@ -19,9 +31,6 @@ argument-hint: <url | 파일경로> [--public]
 | arXiv·논문·PDF | `raw/papers/` |
 | 채용 공고 | `raw/jobs/` |
 | 이미지·첨부 | `raw/assets/` |
-
-URL이면 본문을 가져와 마크다운으로 변환해 저장한다. 이미 로컬 파일이면 해당 폴더로 복사한다.
-`graphify add <url>` 도 기본 저장 경로가 `./raw` 라 사용 가능하다.
 
 frontmatter에 `source.url`, `source.author`, `source.captured` 를 기록한다. **`raw/` 는 항상 `visibility: private`.**
 

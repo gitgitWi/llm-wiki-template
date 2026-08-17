@@ -21,9 +21,10 @@ LLM이 관리하는 개인 지식베이스 템플릿. 마크다운 + git만으�
 | `wiki/` | LLM이 생성·유지하는 페이지 | **자유 쓰기** |
 
 ```
-raw/      articles/ threads/ videos/ papers/ jobs/ assets/   ← 소스 타입별
+raw/      articles/ threads/ videos/ papers/ jobs/ assets/   ← 소스 타입별 (공개 repo에선 gitignore)
 notes/    inbox/ ideas/ career/ logs/                        ← 목적별
 wiki/     index.md log.md digests/ concepts/ entities/ synthesis/ meta/
+tools/    article_archive/                                   ← URL → 마크다운 파이프라인
 CLAUDE.md                                                    ← 운영 스키마
 ```
 
@@ -45,6 +46,19 @@ visibility: private       # 누락·오타 시 private 취급
 | `/query <question>` | index부터 드릴다운 → 인용 포함 답변 → **좋은 답변은 페이지로 저장** |
 | `/lint` | 고아 페이지·깨진 링크·모순·스키마 위반·공개 안전 점검 |
 | `/publish <path>` | 개인정보·회사정보·저작권·private 링크 체크 후 공개 전환 |
+
+## 수집 파이프라인
+
+[`tools/article_archive`](tools/article_archive) 가 URL을 마크다운으로 바꾼다 — defuddle / fxtwitter / 브라우저 폴백의 3단 추출, 한국어 요약·번역, 스키마대로 쓰인 frontmatter까지. Python은 stdlib만 쓰고 node 의존성은 `defuddle` 하나다.
+
+```bash
+python3 tools/article_archive/cli.py scrap <url> --json     # -> raw/articles/<stem>.md
+python3 tools/article_archive/cli.py summarize <stem>        # -> wiki/digests/<stem>.md
+```
+
+프론트엔드에 묶여 있지 않아서 `/ingest`(Claude Code)와 Discord 봇이 같은 도구를 쓰고 같은 파일을 만든다. LLM 백엔드는 감지된다 — Hermes 인터프리터면 그 auxiliary client를, 아니면 OpenAI 호환 엔드포인트를, 둘 다 없으면 추출만 동작한다.
+
+**원문과 전문 번역은 `raw/` 에, 요약은 `wiki/digests/` 에 쓴다.** 앞의 둘은 남의 글이고 전문 번역은 오히려 더 명확한 파생 저작물이라 공개 대상이 아니다. 요약은 내가 쓴 것이라 공개할 수 있다.
 
 ## 쓰기 게이트
 

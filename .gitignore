@@ -1,7 +1,23 @@
+# 외부 원문 전문 — 저작권 문제로 공개 저장소에 커밋하지 않는다.
+# 공개하는 것은 직접 작성한 wiki/digests/ 요약뿐이다.
+# private fork에서는 아래 블록을 지워서 원문까지 버전 관리한다.
+raw/articles/*
+raw/threads/*
+raw/videos/*
+raw/papers/*
+raw/jobs/*
+raw/assets/*
+!raw/*/.gitkeep
+
+# 도구 로컬 설정 (private fork가 자기 repo를 가리키는 곳)
+tools/article_archive/config.json
+
 # graphify 산출물 (재생성 가능)
 graphify-out/
 
 # 의존성·빌드
+__pycache__/
+*.py[cod]
 node_modules/
 dist/
 .astro/

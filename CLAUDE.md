@@ -16,6 +16,12 @@
 
 `raw/`는 진실의 원천이다. 오타가 보여도 고치지 않는다. 원본이 훼손되면 모든 파생 페이지의 근거가 사라진다.
 
+예외 두 가지가 있고, 둘 다 "원본 수정"이 아니다:
+- `raw/articles/<stem>.ko.md` — 전문 번역. 원문의 파생 저작물이라 요약과 달리 공개 대상이 아니고, 그래서 원본 옆에 둔다.
+- 브라우저 재읽기 — 빈약하게 추출된 원본을 더 나은 캡처로 **교체**한다. 편집이 아니라 재수집이다.
+
+**공개 템플릿에서는 `raw/` 가 gitignore 된다.** 외부 기사 전문을 공개 저장소에 올릴 근거가 없기 때문이다. 공개되는 것은 직접 쓴 `wiki/` 페이지뿐이다.
+
 ### `wiki/` 하위 구성
 
 | 폴더 | 용도 |
@@ -111,6 +117,18 @@ related: ["[[other-page]]"]      # 관련 문서 위키링크
 | `/publish <path>` | 공개 전 체크리스트 후 `visibility: public` 전환 |
 
 커맨드 없이 자연어로 요청받아도 해당 절차를 따른다. 예: "이 글 정리해줘" → `/ingest` 절차.
+
+### 추출 도구
+
+URL에서 본문을 가져올 때는 `tools/article_archive/` 를 쓴다. 직접 fetch하지 않는다 — defuddle·fxtwitter·브라우저 폴백과 frontmatter 작성이 이미 되어 있다.
+
+```bash
+python3 tools/article_archive/cli.py scrap <url> --json    # -> raw/articles/<stem>.md
+python3 tools/article_archive/cli.py browser <stem> --json  # 추출이 빈약할 때 다시 읽기
+python3 tools/article_archive/cli.py translate <stem>       # -> raw/articles/<stem>.ko.md
+```
+
+도구의 `summarize` 는 에이전트가 없는 경로(Discord)용이다. **당신이 붙어 있을 때는 요약을 직접 쓴다** — 내 언어로 쓰고 기존 페이지와 엮는 일은 도구가 못 한다. 같은 도구를 Hermes의 Discord 플러그인이 함께 쓰므로, 인터페이스를 바꿀 때는 `tools/article_archive/README.md` 의 CLI 계약을 먼저 확인한다.
 
 ---
 

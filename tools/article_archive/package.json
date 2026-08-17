@@ -1,0 +1,8 @@
+{
+  "name": "article-archive-extractors",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "defuddle": "^0.19.2"
+  }
+}
