@@ -1,12 +1,9 @@
 ---
-title: 개발 로그
-type: note
-visibility: private
-domains: [dev, misc]
-tags: [log]
-status: living
-created: 2026-08-17
-updated: 2026-08-18
+updated: 2026-08-20
+description: Chronological event log for the whole repo — wiki content, tools, and the web app. Newest entry on top.
+read_when: You need to know what changed, when, and why before touching an area you did not build.
+agent: claude-opus-5 / claude-code
+tags: [log, changelog, dev]
 ---
 
 # 개발 로그
@@ -16,6 +13,65 @@ updated: 2026-08-18
 > 형식을 지켜야 `grep "^## \[" .dev/log.md | head -5` 같은 조회가 동작한다.
 
 ---
+
+## [2026-08-20] publish | Effect.ts DST 팩트체크 5개 문서
+- wiki/synthesis/effect-ts-dst-testing.md → public
+- wiki/concepts/deterministic-simulation-testing.md → public
+- wiki/entities/effect-ts.md → public
+- wiki/digests/2026-08-20-ewind-dev.md → public
+- wiki/digests/2026-08-20-rough-sea.md → public
+- 체크리스트 통과: raw 원문 문장 그대로 옮긴 곳 0건(22개 문장 대조), 링크 대상 전부 public, 회사 정보 없음
+- wiki/entities/effect-ts.md 에 Layer 온보딩 절 추가 (Layer<ROut,E,RIn> 모델, merge/provide/provideMerge 차이,
+  메모이제이션·Layer.fresh, Layer.mock, v3 Effect.Service ↔ v4 Context.Service, TestClock 과의 연결)
+
+## [2026-08-20] ingest | Effect.ts DST 주장 팩트체크
+- raw/articles/2026-08-20-ewind-dev.md 저장 (중국어 X 포스트, private)
+- raw/articles/2026-08-20-rough-sea.md 저장 (celld 발표, DST 인용 검증용, private)
+- wiki/synthesis/effect-ts-dst-testing.md 생성 — 15개 주장 항목별 판정
+- wiki/concepts/deterministic-simulation-testing.md 생성 (첫 concept 페이지)
+- wiki/entities/effect-ts.md 생성 (첫 entity 페이지)
+- wiki/digests/2026-08-20-ewind-dev.md, 2026-08-20-rough-sea.md 생성
+- wiki/synthesis/agentic-coding-design-and-code-review.md related 링크 추가
+- wiki/index.md 갱신 (Concepts·Entities 섹션 개설)
+- 검증 결과: 예제 코드는 v3/v4 API 혼합 + `Effect.timeout` 실패 채널 오용으로 동작하지 않음.
+  `effect` stable 은 3.22.1, 4.0 은 rc. Effect 코어에 시드 스케줄러 없음 (PR #6216 미머지).
+- 미해결: index.md 에 공개 digest 2건(stripe, things-we-learned-2024) 누락 — 이번 작업 범위 밖
+
+## [2026-08-20] synthesis | Pi vs oh-my-pi vs fx 3자 코딩 하네스 비교
+- wiki/synthesis/pi-vs-oh-my-pi-vs-fx.md 생성 (원본 Pi·omp 포크·fx 3자 비교 — edit 포맷·컨텍스트/토큰·확장성·권한·샌드박스·프로바이더 게이트웨이)
+- wiki/index.md Synthesis 테이블에 [[pi-vs-oh-my-pi-vs-fx]] 행 추가 (domains: [ai, dev]), 페이지 수 7→8
+- fx 출처: https://fx.sh/llms-full.txt (전체 공식 문서) — Tools·Permissions·Sessions·Subagents·MCP·Authentication·Skills·Configuration
+- 기존 [[pi-vs-oh-my-pi]]의 Pi·omp 인용은 계승, fx를 "거버넌스·게이트웨이 추상화" 축으로 추가
+- 관련: [[pi-vs-oh-my-pi]]
+
+## [2026-08-20] synthesis | Agentic Coding 시대의 소프트웨어 설계와 AI 코드 리뷰·관리 방법론
+- wiki/synthesis/agentic-coding-design-and-code-review.md 생성 (AI 에이전트 도입에 따른 검증 병목, antirez/Liquid AI 루프 설계 철학, 5단계 스위스 치즈 방어 모델, 웹 풀스택 관리 전략)
+- wiki/index.md Synthesis 테이블에 [[agentic-coding-design-and-code-review]] 행 추가 (domains: [ai, dev]), 페이지 수 6→7, updated 2026-08-20
+- 조사 출처: GeekNews 원문(78bd15a7), Liquid AI agent-loops, Linear 보고서, Claude Code 세션 최적화, Boris Cherny 아키타입, GeekNews 관련 13개 토픽
+- 원문 웹 URL 통합 참조 체계 구성 및 frontmatter 계약 준수
+
+## [2026-08-20] translate | Liquid AI agent-loops 기사 전문 한국어 번역
+- raw/articles/2026-08-20-designing-loops-for-production-grade-work.md 전문 한국어 번역 작성 → raw/articles/2026-08-20-designing-loops-for-production-grade-work.ko.md
+- 원문의 파생 저작물 → visibility: private (공개 빌드 제외), frontmatter는 write_translation 규격 준수(title "…(한국어)", translation 블록, related: [[원본 stem]])
+
+## [2026-08-20] synthesis | Pi vs oh-my-pi 코딩 하네스 비교
+- wiki/synthesis/pi-vs-oh-my-pi.md 생성 (원본 Pi 플러그인 방식 vs oh-my-pi omp 포크 비교 — 컨텍스트/토큰 관리·성능·hashline edit)
+- wiki/index.md Synthesis 테이블에 [[pi-vs-oh-my-pi]] 행 추가 (domains: [ai, dev]), 페이지 수 5→6, updated 2026-08-20
+- 조사 출처: oh-my-pi README·hashline README·lesbass 독립 분석·pi.dev compaction 문서·mariozechner 회고
+- 관련: [[yaml-vs-toml]], [[on-device-stt-macos]]
+
+## [2026-08-19] rules | frontmatter 규칙 분리 및 개발 문서로 확대
+- .rules/frontmatter.md 신설 (영문) — Tier A 위키/노트 스키마 + Tier B 개발 문서 5필드 블록, 공통 규칙, 면제 대상
+- CLAUDE.md §2 는 한 줄 포인터만 남김 (AGENTS.md 는 심볼릭 링크라 함께 반영됨)
+- description / read_when / agent 필드 도입 — apps/web/src/content.config.ts 스키마에 optional 로 추가
+- .dev/log.md, .dev/llm-wiki-setup/ 3종, apps/web/README.md, tools/article_archive/README.md 에 Tier B frontmatter 적용
+- 참조 경로 갱신: passes.py, wiki/index.md, apps/web/README.md, .claude/commands/lint.md
+- 로그 헤더 사이에 잘못 삽입돼 있던 [2026-08-18] synthesis 항목을 제자리로 이동
+
+## [2026-08-18] synthesis | YAML vs TOML 포맷 비교
+- wiki/synthesis/yaml-vs-toml.md 생성 (YAML·TOML 문법/철학/AI 파싱·토큰 절약 관점, 선택 가이드)
+- wiki/index.md Synthesis 테이블에 [[yaml-vs-toml]] 행 추가 (domains: [dev])
+- 관련: [[llm-wiki-methodology]]
 
 ## [2026-08-18] restructure | 개발 로그를 wiki/ 밖으로 분리
 - wiki/log.md → .dev/log.md 이동 (wiki/ 는 콘텐츠만, 개발 로그는 .dev/)

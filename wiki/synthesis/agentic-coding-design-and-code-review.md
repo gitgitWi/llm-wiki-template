@@ -10,7 +10,7 @@ updated: 2026-08-20
 description: AI 에이전트 도입에 따른 코드 생성량 폭증 상황에서 소프트웨어 설계, AI 생성 코드의 리뷰 피로 해소, 5단계 스위스 치즈 방어선 및 풀스택(Design System·React·서버) 실전 관리 방법론 정리.
 read_when: 에이전틱 코딩 도입 후 리뷰 과부하를 겪을 때, AI 생성 코드의 품질 관리와 아키텍처 설계 원칙을 수립할 때.
 agent: Gemini 3.7 Flash (high) / Antigravity
-related: []
+related: ["[[effect-ts-dst-testing]]"]
 ---
 
 # Agentic Coding 시대의 소프트웨어 설계와 AI 코드 리뷰·관리 방법론
