@@ -14,6 +14,24 @@ tags: [log, changelog, dev]
 
 ---
 
+## [2026-08-21] publish | TanStack AI WebSocket full-duplex 4개 문서
+- wiki/synthesis/websocket-full-duplex-tanstack-ai.md → public
+- wiki/concepts/full-duplex-transport.md → public
+- wiki/entities/tanstack-ai.md → public
+- wiki/digests/2026-08-20-tan-stack.md → public
+- 체크리스트 6항목 통과: 개인정보·회사정보 없음, 코드 인용 12줄(MIT, 파일 경로 표기), private 링크 없음, raw/ 는 gitignore
+- 미해결: index 에 등재한 2026-08-17-...-pelicans-on-bicyc digest 가 private (파일 자체는 이미 git 추적 중)
+
+## [2026-08-20] ingest+query | TanStack AI WebSocket full-duplex
+- raw/articles/2026-08-20-tan-stack.md 저장 (42단어 트윗, private)
+- wiki/digests/2026-08-20-tan-stack.md 생성
+- wiki/concepts/full-duplex-transport.md 생성 — simplex/half/full 정의, 전송 방식 6종 비교
+- wiki/entities/tanstack-ai.md 생성 — adapter 구조, StreamDurability 심, 0.46.0 WebSocket
+- wiki/synthesis/websocket-full-duplex-tanstack-ai.md 생성 — 소스 대조 팩트체크, 직접 구현 시 놓치는 16가지
+- wiki/index.md 갱신 — 신규 4건 + 미등재 digest 4건(2026-08-17 계열) 보충, 카운트 13→20 / 소스 3→7
+- 근거: TanStack/ai 0.47.0 소스 직접 확인 (stream-to-websocket.ts, connection-adapters.ts, stream-durability.ts)
+- 신규 4건 모두 visibility: private (하드 룰 3) — 공개는 /publish 로
+
 ## [2026-08-20] publish | Effect.ts DST 팩트체크 5개 문서
 - wiki/synthesis/effect-ts-dst-testing.md → public
 - wiki/concepts/deterministic-simulation-testing.md → public

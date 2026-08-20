@@ -6,7 +6,7 @@ domains: [misc]
 tags: [index]
 status: living
 created: 2026-08-17
-updated: 2026-08-20
+updated: 2026-08-21
 description: 위키 전체 카탈로그 — digests/concepts/entities/synthesis/meta 페이지 목록과 한 줄 요약, domains 어휘.
 read_when: 위키에 무엇이 있는지 확인할 때. 모든 쿼리는 여기서 시작한다.
 agent: claude-opus-5 / claude-code
@@ -17,7 +17,7 @@ agent: claude-opus-5 / claude-code
 > 이 위키의 전체 카탈로그. **모든 쿼리는 여기서 시작한다.**
 > 페이지를 만들거나 지우면 즉시 반영한다.
 
-- 페이지 13 · 소스 3 · 최종 갱신 2026-08-20
+- 페이지 20 · 소스 7 · 최종 갱신 2026-08-21
 - 공개 페이지는 웹앱(`apps/web`)에서도 볼 수 있다. 목록·검색·그래프는 이 파일이 아니라 frontmatter 에서 생성된다.
 
 ---
@@ -33,18 +33,21 @@ agent: claude-opus-5 / claude-code
 | [[pi-vs-oh-my-pi]] | 원본 Pi(플러그인) vs oh-my-pi(omp) 포크 비교 — 코딩 작업 컨텍스트/토큰 관리·성능·hashline | `ai` `dev` |
 | [[pi-vs-oh-my-pi-vs-fx]] | Pi·omp·fx 3자 비교 — edit 포맷·컨텍스트/토큰·확장성·권한·샌드박스·프로바이더 게이트웨이 | `ai` `dev` |
 | [[effect-ts-dst-testing]] | Effect.ts TestClock·DST 주장 팩트체크 — 예제 코드 오류, v3/v4 API 차이, 가상 시계 대안 비교 | `dev` `ai` |
+| [[websocket-full-duplex-tanstack-ai]] | TanStack AI 의 WebSocket 전송 팩트체크 — full-duplex 가 실제로 쓰이는 세 곳, offset 재개, 직접 구현 시 놓치는 16가지 | `dev` `ai` |
 
 ## Concepts — 개념·주제
 
 | 페이지 | 요약 | domains |
 |---|---|---|
 | [[deterministic-simulation-testing]] | DST 의 세 축(시계·스케줄·난수/결함), 계보, 가상 시계와의 차이와 도입 비용 | `dev` |
+| [[full-duplex-transport]] | simplex·half·full duplex 정의와 계층, SSE·NDJSON·fetch 업로드·WebSocket·WebTransport·gRPC 방향성 비교 | `dev` |
 
 ## Entities — 사람·회사·제품·도구
 
 | 페이지 | 요약 | domains |
 |---|---|---|
 | [[effect-ts]] | Effect 팩트 시트 — `Effect<A, E, R>` 채널, 3.22.1 stable / 4.0 rc, v3↔v4 테스트 API 대응 | `dev` |
+| [[tanstack-ai]] | TanStack AI 팩트 시트 — connection adapter 로 전송 분리, `StreamDurability` 심, 0.46.0 WebSocket 전송 | `dev` `ai` |
 
 ## Digests — 소스 요약
 
@@ -53,6 +56,10 @@ agent: claude-opus-5 / claude-code
 | [[2026-08-17-llm-wiki]] | Karpathy의 LLM Wiki gist — RAG와 달리 지식을 축적하는 3계층 위키 패턴 | `ai` |
 | [[2026-08-20-ewind-dev]] | Effect 옹호론 — 부작용 전면 통제의 대가로 얻는 결정적·초고속 테스트 | `dev` |
 | [[2026-08-20-rough-sea]] | Ryan Dahl 의 celld 발표, DST 인용의 1차 출처 확인 | `infra` `dev` |
+| [[2026-08-20-tan-stack]] | TanStack AI WebSocket 전송 발표 트윗 — 대화 단위 소켓, full-duplex, offset 재개 주장 | `dev` `ai` |
+| [[2026-08-17-being-a-staff-engineer-at-stripe-in-2026]] | Stripe Staff 엔지니어가 본 AI 시대의 실제 업무 방식 — 사내 AI 지원 정책, 멀티태스킹, 업무 강도 | `career` `ai` |
+| [[2026-08-17-the-last-six-months-in-llms-illustrated-by-pelicans-on-bicyc]] | Simon Willison 키노트 — 6개월간의 모델 릴리스·가격·로컬 추론, 펠리컨 SVG 개인 벤치마크 | `ai` `dev` |
+| [[2026-08-17-things-we-learned-about-llms-in-2024]] | Simon Willison 2024 회고 — GPT-4 장벽 붕괴, 가격 폭락, 로컬 추론, 추론 스케일링 모델 | `ai` `dev` |
 
 ## Meta — 결정 기록
 
