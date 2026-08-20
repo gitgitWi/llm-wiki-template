@@ -206,5 +206,3 @@ TOML에는 이런 복제·병합 메커니즘이 없다. 중복을 줄이거나 
 
 - [[llm-wiki-methodology]] — LLM Wiki의 frontmatter(YAML) 사용과 Dataview 연동 언급.
 - 이 위키의 모든 frontmatter는 YAML로 작성된다(위키 스키마 §2).
-
-<<<<<<< Updated upstream
