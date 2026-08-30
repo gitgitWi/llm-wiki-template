@@ -6,7 +6,7 @@ domains: [misc]
 tags: [index]
 status: living
 created: 2026-08-17
-updated: 2026-08-21
+updated: 2026-08-30
 description: 위키 전체 카탈로그 — digests/concepts/entities/synthesis/meta 페이지 목록과 한 줄 요약, domains 어휘.
 read_when: 위키에 무엇이 있는지 확인할 때. 모든 쿼리는 여기서 시작한다.
 agent: claude-opus-5 / claude-code
@@ -17,7 +17,7 @@ agent: claude-opus-5 / claude-code
 > 이 위키의 전체 카탈로그. **모든 쿼리는 여기서 시작한다.**
 > 페이지를 만들거나 지우면 즉시 반영한다.
 
-- 페이지 20 · 소스 7 · 최종 갱신 2026-08-21
+- 페이지 21 · 소스 7 · 최종 갱신 2026-08-30
 - 공개 페이지는 웹앱(`apps/web`)에서도 볼 수 있다. 목록·검색·그래프는 이 파일이 아니라 frontmatter 에서 생성된다.
 
 ---
@@ -27,6 +27,7 @@ agent: claude-opus-5 / claude-code
 | 페이지 | 요약 | domains |
 |---|---|---|
 | [[agentic-coding-design-and-code-review]] | Agentic Coding 시대 소프트웨어 설계, AI 생성 코드의 리뷰 피로 해소와 5단계 방어선, 풀스택 관리 방법론 | `ai` `dev` |
+| [[lauren-tan-agent-trust-without-reading-code]] | Lauren Tan 강연 — 검증·스킬·하드 CI로 에이전트 코드를 안 보고도 믿는 신뢰 곡선 | `ai` `dev` |
 | [[llm-wiki-methodology]] | LLM Wiki(Karpathy) 패턴과 Zettelkasten·PARA·NotebookLM·mem0·qmd 비교, 개인 문서 정리 설계안 | `ai` |
 | [[on-device-stt-macos]] | M1 Pro에서 한영 혼용 개발자용 완전 로컬 STT 도구 비교 | `ai` `dev` |
 | [[yaml-vs-toml]] | YAML·TOML 문법·철학 비교, AI 파싱·토큰 절약 관점과 선택 가이드 | `dev` |

@@ -1,5 +1,5 @@
 ---
-updated: 2026-08-20
+updated: 2026-08-30
 description: Chronological event log for the whole repo — wiki content, tools, and the web app. Newest entry on top.
 read_when: You need to know what changed, when, and why before touching an area you did not build.
 agent: claude-opus-5 / claude-code
@@ -13,6 +13,27 @@ tags: [log, changelog, dev]
 > 형식을 지켜야 `grep "^## \[" .dev/log.md | head -5` 같은 조회가 동작한다.
 
 ---
+## [2026-08-30] query | Lauren Tan 에이전트 신뢰·검증 강연 정리
+- wiki/synthesis/lauren-tan-agent-trust-without-reading-code.md 생성 (public)
+- wiki/index.md 갱신 — synthesis 추가, 페이지 20→21 (커밋 기준; 로컬 WIP private 페이지는 미포함)
+- wiki/synthesis/agentic-coding-design-and-code-review.md related 링크 추가
+- 근거: 자동생성 자막(Hermes article-archive transcript). 고유명사는 문맥 교정
+
+## [2026-08-28] query | SQLite vs DuckDB 비교 및 임베디드 데이터베이스 지형도
+- wiki/synthesis/sqlite-vs-duckdb-embedded-databases.md 생성 (private)
+- wiki/index.md 갱신 — synthesis 비교 문서 추가, 페이지 21→22
+- SQLite vs DuckDB 철학·아키텍처(Row B-Tree vs Columnar Vectorized)·장단점·선택 기준 정리
+- DuckDB 실무 데이터 구조 및 쿼리 예시(STRUCT/LIST 중첩, 람다 변환, Parquet/JSON 직접 질의, Python Zero-Copy, SQLite ATTACH) 추가
+- 프로세스 내장형 SQL(libSQL, PGLite, H2), KV(RocksDB, LMDB, BadgerDB, redb, Bbolt), Vector(LanceDB), Graph(Kuzu) 생태계 분류
+- 임베디드 NoSQL 대안(NeDB, PouchDB/RxDB, TinyDB, EJDB2, Realm, SQLite JSON1 패턴) 비교
+- 커밋·푸시하지 않음
+
+
+## [2026-08-27] query | 플랫폼 엔지니어·인프라 엔지니어·SRE 차이
+- wiki/synthesis/platform-infrastructure-sre-comparison.md 생성 (private)
+- wiki/index.md 갱신 — synthesis 비교 문서 추가, 페이지 20→21
+- 근거: Google SRE Book, Google Cloud Platform Engineering, CNCF Platforms White Paper, GitLab Handbook SRE role
+- 커밋·푸시하지 않음
 
 ## [2026-08-21] publish | TanStack AI WebSocket full-duplex 4개 문서
 - wiki/synthesis/websocket-full-duplex-tanstack-ai.md → public
